@@ -25,7 +25,7 @@ note_root=C:\Users\user\Documents\Obsidian Vault
 open you python project and call it
 
 ```shell
-python chat_Obsidian.py
+python chat_obsidian.py
 ```
 
 open you obsidian , and there will be a new folder. called `AI-Chat`
