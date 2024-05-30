@@ -1,7 +1,7 @@
 import json
 import logging
 
-import chatutil
+from Chat.chatutil import *
 
 
 def console_out(content: str):
@@ -16,7 +16,7 @@ def console_out(content: str):
 
 
 if __name__ == '__main__':
-    util = chatutil.ChatUtil(console_out)
+    util = ChatUtil(console_out)
     print(' (Q to quit.)  free any time.')
     while True:
         msg = input("You: ")
