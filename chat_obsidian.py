@@ -40,7 +40,8 @@ def main():
         util = ChatUtil(write_out)
     except Exception as e:
         print('initialize failure. pls check your config file.')
-        raise e
+        # raise e
+        return
 
     directory_to_scan = note_root + '/AI-Chat/'
     if not os.path.exists(directory_to_scan):
