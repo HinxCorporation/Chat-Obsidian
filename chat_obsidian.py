@@ -1,4 +1,5 @@
 # listen to a canvas file , and make sure all content has response.
+import os.path
 import time
 
 from Chat.chatutil import *
@@ -19,6 +20,9 @@ def main():
     if not note_root:
         print('needs to setup a note root on config.ini file')
         return
+    if not os.path.exists(note_root):
+        print('You needs to set your custom Obsidian note root, to fireup this proj (config.ini [setting] [note_root])')
+        return
 
     def write_out(json_str: str):
         w = get_words(json_str)
@@ -32,7 +36,11 @@ def main():
             flush_char_f.write(w)
         pass
 
-    util = ChatUtil(write_out)
+    try:
+        util = ChatUtil(write_out)
+    except Exception as e:
+        print('initialize failure. pls check your config file.')
+        raise e
 
     directory_to_scan = note_root + '/AI-Chat/'
     if not os.path.exists(directory_to_scan):
