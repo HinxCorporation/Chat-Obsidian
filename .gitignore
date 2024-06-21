@@ -3,4 +3,5 @@ config.ini
 demo.ipynb
 errors.log
 chat.ps1
+venv
 .idea

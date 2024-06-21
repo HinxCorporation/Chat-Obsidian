@@ -1,0 +1,38 @@
+
+        // Register a more general workspace event to see if it's working
+        // this.registerEvent(this.app.workspace.on('layout-change', this.handleLayoutChange.bind(this)));
+        // this.registerEvent(this.app.workspace.on('active-leaf-change', (_1) => {
+        //     new Notice('active-leaf-change')
+        // }));
+        // this.registerEvent(
+        //     this.app.workspace.on('active-leaf-change', this.handleActiveLeafChange.bind(this))
+        // );
+        // this.registerEvent(this.app.workspace.on('changed',(_1)=>{ new Notice('changed')}));
+        // this.registerEvent(this.app.workspace.on('create',(_1)=>{ new Notice('create')}));
+        // this.registerEvent(this.app.workspace.on('css-change',(_1)=>{ new Notice('css-change')}));
+        // this.registerEvent(this.app.workspace.on('delete',(_1)=>{ new Notice('delete')}));
+        // this.registerEvent(this.app.workspace.on('deleted',(_1)=>{ new Notice('deleted')}));
+        this.registerEvent(this.app.workspace.on('editor-change', this.on_editor_changed.bind(this)));
+        // this.registerEvent(this.app.workspace.on('editor-drop',(_1)=>{ new Notice('editor drop')}));
+        // this.registerEvent(this.app.workspace.on('editor-menu',(_1)=>{ new Notice('editor menu')}));
+        // this.registerEvent(this.app.workspace.on('editor-paste',(_1)=>{ new Notice('editor paste')}));
+        // this.registerEvent(this.app.workspace.on('file-menu',(_1)=>{ new Notice('file-menu')}));
+        // this.registerEvent(this.app.workspace.on('file-open',(_1)=>{ new Notice('file-open')}));
+        // this.registerEvent(this.app.workspace.on('files-menu',(_1)=>{ new Notice('files-menu')}));
+        // this.registerEvent(this.app.workspace.on('group-change',(_1)=>{ new Notice('group-change')}));
+        // this.registerEvent(this.app.workspace.on('modify',(_1)=>{ new Notice('modify')}));
+        // this.registerEvent(this.app.workspace.on('pinned-change',(_1)=>{ new Notice('pinned-change')}));
+        // this.registerEvent(this.app.workspace.on('quick-preview',(_1)=>{ new Notice('quick-preview')}));
+        // this.registerEvent(this.app.workspace.on('quit',(_1)=>{ new Notice('quit')}));
+        // this.registerEvent(this.app.workspace.on('rename',(_1)=>{ new Notice('rename')}));
+        // this.registerEvent(this.app.workspace.on('resize',(_1)=>{ new Notice('resize')}));
+        // this.registerEvent(this.app.workspace.on('resolve',(_1)=>{ new Notice('resolve')}));
+        // this.registerEvent(this.app.workspace.on('resolved',(_1)=>{ new Notice('resolved')}));
+        // this.registerEvent(this.app.workspace.on('url-menu',(_1)=>{ new Notice('url-menu')}));
+        // this.registerEvent(this.app.workspace.on('window-close',(_1)=>{ new Notice('window-close')}));
+        // this.registerEvent(this.app.workspace.on('window-open',(_1)=>{ new Notice('window-open')}));
+        // this.registerEvent(this.app.workspace.on('canvas-node-edited', (node) => { new Notice(`Edited.: ${node.id}`); }));
+        // this.registerEvent(this.app.workspace.on('canvas-node-edited', (node) => {
+        //     new Notice(`Edited.: ${node.id}`);
+        // }));
+

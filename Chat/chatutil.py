@@ -17,7 +17,7 @@ class ChatUtil:
         config = configparser.ConfigParser()
 
         try:
-            config.read(config_file)
+            config.read(config_file,encoding='utf-8')
             current = config.get('ai', 'current')
             self.key = config.get(current, "key")
             self.url = config.get(current, "url")
@@ -28,6 +28,12 @@ class ChatUtil:
             print('AI:', current, self.url)
             if self.use_proxy:
                 print('using Proxy:', self.proxy_uri)
+
+            color_block_options = config.options('Colors')
+            self.colors = dict()
+            for key in color_block_options:
+                self.colors[key] = config.get('Colors', key)
+
         except (configparser.NoSectionError, configparser.NoOptionError) as e:
             logging.error(f"Error reading config file: {e}")
             raise
@@ -39,11 +45,19 @@ class ChatUtil:
         }
         self.block_mark = 'data:'
 
+    def get_color(self, colorName):
+        exist = self.colors.__contains__(colorName)
+        if exist:
+            color = self.colors[colorName]
+        else:
+            color = None
+        return exist, color
+
     def create_request(self, **kwargs):
         if self.use_proxy:
             return requests.request("POST", self.url, stream=True, proxies={"https": self.proxy_uri, }, **kwargs)
         else:
-            return requests.request("POST", self.url, stream=True, **kwargs)
+            return requests.request("POST", self.url, stream=True, proxies={"http": "", "https": ""}, **kwargs)
 
     def go_next(self, content: str):
         position = content.find(self.block_mark)
@@ -54,12 +68,25 @@ class ChatUtil:
         return '', content.strip()
 
     @staticmethod
-    def parse_to_filename(input_string, length=12):
-        invalid_chars_pattern = r'[<>:"/\\|?*]'
-        filename = re.sub(invalid_chars_pattern, '', input_string)
-        if len(filename) > length:
-            filename = filename[:length] + '...'
-        return filename
+    def parse_to_filename(input_string: str, length=12):
+        """
+        Parse the input string and convert it to a valid filename.
+
+        Args:
+            input_string (str): The input string to be parsed.
+            length (int): The maximum length of the output filename. Default is 12.
+
+        Returns:
+            str: The parsed and valid filename.
+        """
+        INVALID_CHARS_FOR_FILENAMES = re.compile(r'[<>:"/\\|?*]')
+        REPLACED_CHARS = ['\n', '\r', '\t', '#', '%', '&', '^', '@', '~', '!', '$']
+        if len(input_string) > length:
+            input_string = input_string[:length]
+        for char in REPLACED_CHARS:
+            input_string = input_string.replace(char, '')
+        valid_filename = INVALID_CHARS_FOR_FILENAMES.sub('', input_string).strip()
+        return valid_filename[:length] + '...' if len(valid_filename) > length else valid_filename
 
     def try_outline(self, input_str):
         line, input_str = self.go_next(input_str)
@@ -82,6 +109,7 @@ class ChatUtil:
                        "content": msg,
                        "role": "user"
                    }]
+
         msg_stack = ''
         payload = json.dumps({
             "messages": context,
@@ -118,4 +146,8 @@ class ChatUtil:
             while msg_stack and self.block_mark in msg_stack:
                 msg_stack = self.try_outline(msg_stack)
         except requests.exceptions.RequestException as e:
+            print(e)
             logging.error(f"Request error: {e}")
+        except Exception as e:
+            print(e)
+            logging.error(f"Error: {e}")
