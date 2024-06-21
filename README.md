@@ -31,7 +31,7 @@ python chat_obsidian.py
 open you obsidian , and there will be a new folder. called `AI-Chat`
 create a new Canvas and make a rename it.
 
-![image-20240530171605633]((https://raw.githubusercontent.com/HinxCorporation/Chat-Obsidian/master/README.assets/image-20240530171605633.png)
+![image-20240530171605633](https://raw.githubusercontent.com/HinxCorporation/Chat-Obsidian/master/README.assets/image-20240530171605633.png)
 
 like that, 
 
