@@ -62,13 +62,15 @@ Open you obsidian , and there will be a new folder. called `AI-Chat`
 create a new Canvas and make a rename it.
 *Obsidian canvas example*
 
-![image-20240530171605633](https://raw.githubusercontent.com/HinxCorporation/Chat-Obsidian/master/README.assets/example-Obsidian.png)
+![Obsidian](https://raw.githubusercontent.com/HinxCorporation/Chat-Obsidian/master/README.assets/example-Obsidian.png)
 
 Once you are create a new note , finished with `\` , It will auto go-on.
 
-*console example*
+*console example (GIF)*
+![Console](https://raw.githubusercontent.com/HinxCorporation/Chat-Obsidian/master/README.assets/example-console.gif)
 
-![image-20240530171605633](https://raw.githubusercontent.com/HinxCorporation/Chat-Obsidian/master/README.assets/example-console.gif)
+*example video*
+[![watch video](http://img.youtube.com/vi/lbK0jWrrjpM/0.jpg)](https://www.youtube.com/watch?v=lbK0jWrrjpM)
 
 
 ##### step.3 enjoy

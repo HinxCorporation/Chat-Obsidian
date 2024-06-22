@@ -71,7 +71,9 @@ python chat_console.py
 创建一个新的笔记，完成后使用 `\`，它将自动进行下一步。
 
 *控制台示例*
-
 ![example - console](https://raw.githubusercontent.com/HinxCorporation/Chat-Obsidian/master/README.assets/example-console.gif)
+
+*视频例子*
+[![watch video](http://img.youtube.com/vi/lbK0jWrrjpM/0.jpg)](https://www.youtube.com/watch?v=lbK0jWrrjpM)
 
 ##### 步骤3：享受使用
