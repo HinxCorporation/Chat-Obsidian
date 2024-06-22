@@ -7,19 +7,10 @@ make obsidian able to chat like GPT.
 
 ##### step.1 finished config with se
 
-```ini
-[ai]
-current=deepseek
+copy `config.sample.ini` to `config.ini`
+set `note_root` to you obsidian note root.
+set `deepseek.key` to your special key.
 
-[deepseek]
-key=sk-12345678901234567890c
-url=https://api.deepseek.com/chat/completions
-current=deepseek-chat
-
-[setting]
-cache_transitions=false
-note_root=C:\Users\user\Documents\Obsidian Vault
-```
 ##### step.2 fire up
 
 open you python project and call it
