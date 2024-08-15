@@ -23,6 +23,33 @@ make obsidian able to chat like GPT.
 - Nerd font is not required. if you want it clear on console, remove them from config
 - `requirements` has to be installed
 
+## New Continue DEV
+
+Now you call add you local expose features to local bot.
+
+##### HOW TO
+
+1. open this project on your ide.
+2. locate to the construction of chat bot , for example 'chat_on_console.py' under the `ChatObsidian/obsolete_obsidian_utils` folder.
+3. find the line `self.bot: ChatBot = DeepSeekBot(post_words=self.print_console_word)` on the constructor , eg: line 14
+4. Expose you custom expose method via `ai_exposed_function` decorator. like the expose demo
+
+```python
+# this is the example of how to expose a function to Ai assistant
+@ai_exposed_function
+def ai_get_bot_name(self):
+    """
+    method exposed to Ai assistant , returns current bot name
+    """
+    return self.bot_name
+```
+
+##### HOW IT WORKS
+
+The `ai_exposed_function` decorator will add the function to the `exposed_functions` list.
+The Chat bot collect all exposed function and expose them to Ai assistant while it was constructing.
+
+
 ## How to use
 
 ##### step.1 finished config with se

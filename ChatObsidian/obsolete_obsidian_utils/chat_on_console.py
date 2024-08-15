@@ -1,6 +1,6 @@
 from PyAissistant.PyChatBot.chat_api import ChatBot
 from PyAissistant.PyChatBot.deep_seek_bot import DeepSeekBot
-
+from PyAissistant.Extension.ai_extension import ai_exposed_function
 from .console_chat_extension import *
 
 
@@ -18,6 +18,14 @@ class ConsoleChat:
         self.bot_name = bot_name
         self.system_name = system_name
         self.fm_name = fm_name
+
+    # this is the example of how to expose a function to Ai assistant
+    @ai_exposed_function
+    def ai_get_bot_name(self):
+        """
+        method exposed to Ai assistant , returns current bot name
+        """
+        return self.bot_name
 
     def print_console_word(self, word: str):
         print(word, end='', flush=True)
