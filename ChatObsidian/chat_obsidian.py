@@ -1,11 +1,6 @@
 # listen to a canvas file , and make sure all content has response.
-import os.path
 
 from .WatcherUtil import *
-from .Queue import Queue
-
-current_chat = ''
-queue = Queue()
 
 
 def run():
@@ -14,7 +9,7 @@ def run():
         return
 
     def write_out(bot_words: str):
-        global current_chat
+        current_chat = current.current_chat
         if not current_chat:
             return
 

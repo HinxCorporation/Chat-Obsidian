@@ -62,7 +62,7 @@ def process_relative_block(util, nodes, edges, blank_node, file, obsidian_dir):
 
     blank_node['text'] = text
     y_user, user_color = util.get_color('user_dialog')
-    if y_user and user_color is not '0':
+    if y_user and user_color != '0':
         # set or add color field as color
         blank_node['color'] = user_color
 

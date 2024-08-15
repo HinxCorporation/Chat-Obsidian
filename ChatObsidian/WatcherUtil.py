@@ -1,13 +1,15 @@
-# listen to a canvas file , and make sure all content has response.
 import os.path
 import time
 from pathlib import Path
+
+from .ObsidianShared import *
 
 from watchdog.events import PatternMatchingEventHandler
 from watchdog.observers import Observer
 
 from .obsolete_obsidian_utils.chatutil import *
 from .obsolete_obsidian_utils.obsidian_utils import *
+from .chat_obsidian import *
 
 
 class WatcherHandler(PatternMatchingEventHandler):
@@ -18,15 +20,15 @@ class WatcherHandler(PatternMatchingEventHandler):
 
     # Event handlers here, for example:
     def on_modified(self, event):
-        global queue
+
         src_path = event.src_path
-        if not queue.__contains__(src_path):
-            queue.enqueue(src_path)
+        if not current.queue.__contains__(src_path):
+            current.queue.enqueue(src_path)
 
     def on_created(self, event):
         src_path = event.src_path
-        if not queue.__contains__(src_path):
-            queue.enqueue(src_path)
+        if not current.queue.__contains__(src_path):
+            current.queue.enqueue(src_path)
 
 
 def print_context(context):
@@ -56,14 +58,14 @@ def process_canvas_file(file, util, note_root):
     ids = set()
     for e in edges:
         ids.add(e['fromNode'])
-    global current_chat
+
     goes_to_chat = [n for n in nodes if validate_chat_node(n, ids)]
     i_len = len(goes_to_chat)
     if i_len > 0:
         print(f'new chat: {i_len}')
         for blank_node in goes_to_chat:
-            current_chat, text = process_relative_block(util, nodes, edges, blank_node, file, note_root)
-            print(f'begin chat : {text} , update it to {current_chat}')
+            current.current_chat, text = process_relative_block(util, nodes, edges, blank_node, file, note_root)
+            print(f'begin chat : {text} , update it to {current.current_chat}')
             context = create_message_chain(blank_node, nodes, edges, note_root)
             # print(context)
             print_context(context)
@@ -71,7 +73,7 @@ def process_canvas_file(file, util, note_root):
             time.sleep(2)
     else:
         pass
-    current_chat = ''
+    current.current_chat = ''
 
 
 def begin_observe(directory_to_scan):
@@ -131,8 +133,8 @@ def setup_observers(note_root, folders_list):
 def run_observers(observers, **kwargs):
     try:
         while True:
-            while queue.has_next():
-                process_files(queue.dequeue(), **kwargs)
+            while current.queue.has_next():
+                process_files(current.queue.dequeue(), **kwargs)
             time.sleep(0.5)
     except KeyboardInterrupt:
         for observer in observers:
