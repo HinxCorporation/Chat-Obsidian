@@ -2,7 +2,7 @@ from .Chat import *
 from .chat_bot_util import *
 
 
-class ChatBot:
+class ChatBot_obs:
     def __init__(self, write_out):
         self.current_chat: Chat
         self.current_chat = None

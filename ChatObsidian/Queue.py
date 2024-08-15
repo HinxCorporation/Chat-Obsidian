@@ -1,4 +1,7 @@
 class Queue:
+    """
+    Queue class to implement a queue data structure.
+    """
 
     def __init__(self):
         self.queue = []

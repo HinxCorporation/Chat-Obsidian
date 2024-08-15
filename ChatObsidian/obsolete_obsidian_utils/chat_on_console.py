@@ -1,19 +1,18 @@
-from . import *
-from .deep_seek_bot import *
-from .ollama_bot import *
+from PyAissistant.PyChatBot.chat_api import ChatBot
+from PyAissistant.PyChatBot.deep_seek_bot import DeepSeekBot
+
+from .console_chat_extension import *
+
+
+# from .deep_seek_bot import *
 
 
 class ConsoleChat:
-    def __init__(self, bot: ChatBot = None, user_name="You", bot_name="Bot", system_name='system', fm_name='file'):
+    def __init__(self, user_name="You", bot_name="Bot", system_name='system', fm_name='file'):
         self.bot_msg: str = ''
         # utils needs an output method with a token input
-        self.bot: ChatBot
-        if bot is not None:
-            self.bot = bot
-        else:
-            self.bot = DeepSeekBot()
-            # self.bot = OllamaBot()
-        self.bot._write_out = self.print_console_word
+        self.bot: ChatBot = DeepSeekBot(post_words=self.print_console_word)
+
         self.running = True
         self.user_name = user_name
         self.bot_name = bot_name

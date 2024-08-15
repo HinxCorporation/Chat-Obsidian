@@ -3,11 +3,14 @@ import logging
 
 import requests
 
-from .chat_api import ChatBot
+from .chat_api import ChatBot_obs
 from .chat_bot_util import *
 
 
-class DeepSeekBot(ChatBot):
+class DeepSeekBot_obs(ChatBot_obs):
+    """
+    the obsolete version of DeepSeekBot
+    """
 
     def __init__(self, post_words=print_words):
         super().__init__(post_words)

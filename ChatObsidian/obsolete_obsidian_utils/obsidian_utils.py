@@ -1,5 +1,5 @@
-from Chat.common import *
-from PyChatBot.chat_bot_util import *
+from .common import *
+from .chat_bot_util import *
 
 
 def process_relative_block(util, nodes, edges, blank_node, file, obsidian_dir):

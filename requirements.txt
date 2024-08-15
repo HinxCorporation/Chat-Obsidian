@@ -1,4 +1,5 @@
+PyAissistant
+ollama-api~=0.1.1
 requests~=2.32.1
 watchdog~=4.0.1
 colorama~=0.4.6
-ollama-api~=0.1.2
