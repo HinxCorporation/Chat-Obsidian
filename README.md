@@ -14,6 +14,7 @@ make obsidian able to chat like GPT.
 - [ ] RAG - support [ In coming ]
 - [ ] langchain - support [ In coming ]
 - [ ] plugin as Obsidian [ In coming ]
+- [x] Local tool call features 2024/08/15 `require new PyAissistant package , needs to reinstall requirements`
 
 ## Notice
 
@@ -37,6 +38,11 @@ set `deepseek.key` to your special key.
 First, you need to activate the venv, especially if you are not familiar with using Python, as venv is the most straightforward method.
 For Windows platforms, you can use PowerShell to run `install.ps1`. If you are on a Mac or Linux, you can use `install.sh`.
 Alternatively, you can manually execute the following steps.
+
+```shell
+# install PyAissistant
+pip install PyAissistant
+```
 
 ```shell
 python -m venv venv
