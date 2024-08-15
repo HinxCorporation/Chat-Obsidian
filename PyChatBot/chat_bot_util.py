@@ -1,5 +1,5 @@
-import os
 import json
+import os
 import uuid
 
 BOT_ROLE = "assistant"
@@ -9,13 +9,55 @@ USER_ROLE = "user"
 PREFIX_LENGTH = 9
 
 
+def console_out(content: str):
+    print_words(try_get_allama_words(content))
+
+
+def try_get_allama_words(content: str):
+    try:
+        word = get_allama_words(content)
+        return word
+    except:
+        return '*'
+
+
+def go_next(content: str):
+    lines = content.splitlines()
+    if len(lines) > 1:
+        return lines[0].strip(), "\n".join(lines[1:])
+    return "", content
+
+
+def try_outline(input_str):
+    line, input_str = go_next(input_str)
+    if line:
+        console_out(line)
+    else:
+        print('-', end='', flush=True)
+    return input_str
+
+
+def get_allama_words(content):
+    try:
+        json_obj = json.loads(content)
+        # return json_obj['response']
+        return json_obj['message']['content']
+    except:
+        print(content)
+        return '?'
+
+
+def print_words(word: str):
+    print(word, end='', flush=True)
+
+
 def clear_console():
     os.system('cls' if os.name == 'nt' else 'clear')
 
 
-def generate_uuid():
+def generate_uuid(length=16):
     # def length = 32
-    return str(uuid.uuid4()).replace('-', '')[:16]
+    return str(uuid.uuid4()).replace('-', '')[:length]
 
 
 # def get_words(content):
@@ -28,7 +70,7 @@ def generate_uuid():
 #         return '-'
 
 
-def get_words(content):
+def get_words_deep_seek_bot(content):
     try:
         json_obj = json.loads(content)
         return json_obj['choices'][0]['delta']['content']

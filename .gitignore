@@ -5,3 +5,10 @@ errors.log
 chat.ps1
 venv
 .idea
+temp
+
+#demo files or local data
+payload.json
+response.dat
+[Cc]aches
+[Tt]est

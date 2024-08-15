@@ -169,7 +169,7 @@ def main():
         if not os.path.exists(folder):
             os.makedirs(folder)
 
-        w = get_words(json_str)
+        w = get_words_deep_seek_bot(json_str)
         print(w, end='')
         with open(current_chat, 'a', encoding='utf-8') as flush_char_f:
             # write content with sample line
@@ -191,6 +191,4 @@ def main():
 
 
 if __name__ == "__main__":
-
-    
     main()

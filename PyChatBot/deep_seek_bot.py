@@ -1,21 +1,18 @@
 import configparser
-import json
 import logging
-import os
 
 import requests
-from Chat.common import *
+
+from .chat_api import ChatBot
+from .chat_bot_util import *
 
 
-class ChatUtil:
+class DeepSeekBot(ChatBot):
 
-    def __init__(self, c_out):
-        # Configure logging
-        logging.basicConfig(filename='errors.log', level=logging.ERROR, format='%(asctime)s %(levelname)s:%(message)s')
-        self.cout = c_out
+    def __init__(self, post_words=print_words):
+        super().__init__(post_words)
         config_file = 'config.ini'
         config = configparser.ConfigParser()
-
         try:
             config.read(config_file, encoding='utf-8')
             current = config.get('ai', 'current')
@@ -45,6 +42,29 @@ class ChatUtil:
         }
         self.block_mark = 'data:'
 
+    def create_request(self, **kwargs):
+        if self.use_proxy:
+            return requests.request("POST", self.url, stream=True, proxies={"https": self.proxy_uri, }, **kwargs)
+        else:
+            return requests.request("POST", self.url, stream=True, proxies={"http": "", "https": ""}, **kwargs)
+
+    def go_next(self, content: str):
+        # find the first block
+        position = content.find(self.block_mark)
+        if position != -1:
+            current_line = content[:position].strip()
+            rest_content = content[position + len(self.block_mark):]
+            return current_line, rest_content
+        return '', content
+
+    def try_outline(self, input_str):
+        line, input_str = self.go_next(input_str)
+        if line:
+            word = get_words_deep_seek_bot(line)
+            # print(f'{word}: in {line}')
+            self._write_out(word), word
+        return input_str, ""
+
     def get_color(self, colorName):
         exist = self.colors.__contains__(colorName)
         if exist:
@@ -53,48 +73,15 @@ class ChatUtil:
             color = None
         return exist, color
 
-    def create_request(self, **kwargs):
-        if self.use_proxy:
-            return requests.request("POST", self.url, stream=True, proxies={"https": self.proxy_uri, }, **kwargs)
-        else:
-            return requests.request("POST", self.url, stream=True, proxies={"http": "", "https": ""}, **kwargs)
-
-    def go_next(self, content: str):
-        position = content.find(self.block_mark)
-        if position != -1:
-            current_line = content[:position].strip()
-            rest_content = content[position + len(self.block_mark):].strip()
-            return current_line, rest_content
-        return '', content.strip()
-
-    def try_outline(self, input_str):
-        line, input_str = self.go_next(input_str)
-        if line:
-            self.cout(line)
-        return input_str
-
-    def chat(self, msg, context=None, max_tk=2048, model=''):
-        if not model:
-            model = self.model
-        if not context:
-            context = [
-                {
-                    "content": "You are a helpful assistant",
-                    "role": "system"
-                }
-            ]
-        context = [*context,
-                   {
-                       "content": msg,
-                       "role": "user"
-                   }]
-
-        msg_stack = ''
+    def _generate_response(self, user_input: str) -> [str, str]:
+        # response = self.client.request_completion(model="llama3.1", stream=True, prompt=message)
+        chain = self.message_chain()
+        model = self.model
         payload = json.dumps({
-            "messages": context,
+            "messages": chain,
             "model": model,
             "frequency_penalty": 0,
-            "max_tokens": max_tk,
+            "max_tokens": 2048,
             "presence_penalty": 0,
             "stop": None,
             "stream": True,
@@ -103,30 +90,35 @@ class ChatUtil:
             "logprobs": False,
             "top_logprobs": None
         })
+        with open('payload.json', 'w', encoding='utf-8') as f:
+            f.write(payload)
+        response_text = ""
+        msg_stack = ""
         try:
             response = self.create_request(headers=self.headers, data=payload)
             response.raise_for_status()
-
-            cache = None
-            if self.cache_transitions:
-                cache_name = parse_to_filename(msg) + '.response.json'
-                if not os.path.exists('caches'):
-                    os.mkdir('caches')
-                cache = open('caches/' + cache_name, 'w', encoding='utf-8')
-
-            for chunk in response.iter_content(chunk_size=1024):
-                chunk = chunk.decode('utf-8')  # Decode bytes to string
-                if cache:
-                    cache.write(chunk)
-                msg_stack += chunk
-                msg_stack = self.try_outline(msg_stack)
-            if cache:
-                cache.close()
-            while msg_stack and self.block_mark in msg_stack:
-                msg_stack = self.try_outline(msg_stack)
+            with open('response.dat', 'wb') as f:
+                for chunk in response.iter_content(chunk_size=1024):
+                    f.write(chunk)
+                    chunk_text = chunk.decode('utf-8')  # Decode bytes to string
+                    msg_stack += chunk_text
+                    # process every block
+                    while msg_stack and self.block_mark in msg_stack:
+                        msg_stack, w = self.try_outline(msg_stack)
+                        response_text += w
         except requests.exceptions.RequestException as e:
             print(e)
             logging.error(f"Request error: {e}")
         except Exception as e:
             print(e)
             logging.error(f"Error: {e}")
+
+        # from message stack line 0 read id
+        try:
+            first_line = msg_stack.splitlines()[0][len(self.block_mark)+1:]
+            json_data = json.loads(first_line)
+            uuid_tex = json_data.get('id')
+        except:
+            uuid_tex = generate_uuid(32)
+
+        return response_text, uuid_tex

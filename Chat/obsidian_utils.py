@@ -1,4 +1,5 @@
-from chat_bot_util import *
+from Chat.common import *
+from PyChatBot.chat_bot_util import *
 
 
 def process_relative_block(util, nodes, edges, blank_node, file, obsidian_dir):
@@ -15,7 +16,7 @@ def process_relative_block(util, nodes, edges, blank_node, file, obsidian_dir):
     text = str(blank_node['text']).strip().strip('\\')
     canvas_folder, canvasName = os.path.split(file)
     full_path = os.path.join(canvas_folder, f'dialog\\{canvasName}.ai.assets',
-                             util.parse_to_filename(text, 46) + f'.md')
+                             parse_to_filename(text, 46) + f'.md')
     # relative_file = 'AI-Chat/dialog/{canvasName}.ai.assets/' + util.parse_to_filename(text, 46) + f'.md'
     relative_file = os.path.relpath(str(full_path), obsidian_dir).replace('\\', '/')
     new_id = generate_uuid()

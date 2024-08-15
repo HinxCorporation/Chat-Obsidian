@@ -1,63 +1,11 @@
 # listen to a canvas file , and make sure all content has response.
 import os.path
 
-from colorama import Fore, Back, Style
-
 from Chat.chatutil import *
-from chat_bot_util import *
-
-USE_NERD_FONT = False
+from PyChatBot.chat_on_consle import *
 
 
-def process_ai_message(text_content):
-    prefix = text_content[:PREFIX_LENGTH] if len(text_content) > PREFIX_LENGTH else text_content
-
-    if ':' in prefix:
-        message = create_system_message(text_content)
-        return True, message
-    return False, None
-
-
-def read_config_file(file_path):
-    with open(file_path, 'r', encoding='utf-8') as file:
-        return file.read()
-
-
-def _color_out(custom, txt):
-    print(custom, end='')
-    print(txt, end='')
-    print(Style.RESET_ALL)
-
-
-def system_out(txt):
-    _color_out(Back.MAGENTA, txt)
-
-
-def tips_out(txt):
-    _color_out(Fore.CYAN, txt)
-
-
-def user_out(txt):
-    _color_out(Fore.GREEN, txt)
-
-
-def file_out(txt):
-    _color_out(Fore.YELLOW, txt)
-
-
-def greet():
-    system_out('(Q to quit.)  free any time. or ctrl + C finish. and make new chat.')
-
-
-def bye():
-    system_out('Exited. Tks for use. Thanks♪(･ω･)ﾉ')
-
-
-def bold(text):
-    return '\033[1m' + str(text) + '\033[0m'
-
-
-class ConsoleChat:
+class ConsoleChat_Old:
     def __init__(self, user_name="You", bot_name="Bot", system_name='system', fm_name='file'):
         self.bot_msg: str = ''
         # utils needs an output method with a token input
@@ -71,7 +19,7 @@ class ConsoleChat:
 
     def console_out(self, content: str):
         try:
-            word = get_words(content)
+            word = get_words_deep_seek_bot(content)
             print(word, end='', flush=True)
             self.bot_msg = self.bot_msg + word
         except Exception as ee:
@@ -95,6 +43,7 @@ class ConsoleChat:
 
     def loop(self):
         self.bot_msg = ''
+        print('old chat bot method')
         print(Fore.LIGHTGREEN_EX + self.user_name + ': ', end='')
         msg = input()
         print(Style.RESET_ALL, end='')
@@ -107,18 +56,7 @@ class ConsoleChat:
             msg = f'file:{msg}'
         ai, dialog = process_ai_message(msg)
         if ai:
-            try:
-                _role = dialog["role"]
-                if msg.startswith('file:'):
-                    file_out(f'+ {self.fm_name}: {msg[len("file:"):]}')
-                    tips_out(f'{self.system_name}: {dialog["content"]}')
-                elif _role == SYS_ROLE:
-                    tips_out(f'{self.system_name}: {dialog["content"]}')
-                else:
-                    tips_out(f'{_role}: {dialog["content"]}')
-            except:
-                # user_out(mg)
-                pass
+            out_ai_role_msg(self.fm_name, self.system_name, msg, dialog)
             self.msg_stack.append(dialog)
         else:
             self.chat(msg)
@@ -132,7 +70,7 @@ if __name__ == '__main__':
     bot_tex = 'Bot'
     sys_tex = "System"
     fm_tex = 'file'
-
+    USE_NERD_FONT = ""
     clear_console()
 
     try:
@@ -157,13 +95,14 @@ if __name__ == '__main__':
     else:
         system_out(f'{sys_tex} welcome')
 
-    console_chat = ConsoleChat(user_tex, bot_tex, sys_tex, fm_tex)
+    console_bot = ConsoleChat(None, user_tex, bot_tex, sys_tex, fm_tex)
+
     greet()
-    while console_chat.running:
+    while console_bot.running:
         try:
-            console_chat.loop()
+            console_bot.loop()
         except KeyboardInterrupt:
             # reset style on interrupt
             print(Style.RESET_ALL, end='')
-            console_chat.new_dialog()
+            console_bot.new_dialog()
     bye()
