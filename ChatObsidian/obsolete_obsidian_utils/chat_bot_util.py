@@ -57,7 +57,10 @@ def clear_console():
 
 def generate_uuid(length=16):
     # def length = 32
-    return str(uuid.uuid4()).replace('-', '')[:length]
+    uid = str(uuid.uuid4()).replace('-', '')
+    if len(uid) > length:
+        return uid[:length]
+    return uid
 
 
 # def get_words(content):

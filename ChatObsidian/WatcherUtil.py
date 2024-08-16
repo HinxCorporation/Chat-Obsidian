@@ -1,15 +1,11 @@
 import os.path
-import time
 from pathlib import Path
-
-from .ObsidianShared import *
 
 from watchdog.events import PatternMatchingEventHandler
 from watchdog.observers import Observer
 
-from .obsolete_obsidian_utils.chatutil import *
-from .obsolete_obsidian_utils.obsidian_utils import *
 from .chat_obsidian import *
+from .obsolete_obsidian_utils.chatutil import *
 
 
 class WatcherHandler(PatternMatchingEventHandler):
@@ -45,35 +41,12 @@ def print_context(context):
         pass
 
 
-def process_canvas_file(file, util, note_root):
+def process_canvas_file(file, util: ChatUtil, note_root):
     """
     file is canvas file
     """
     # try:
-    with open(file, 'r', encoding='utf-8') as f:
-        json_dat = json.load(f)
-        nodes = json_dat['nodes']
-        edges = json_dat['edges']
-
-    ids = set()
-    for e in edges:
-        ids.add(e['fromNode'])
-
-    goes_to_chat = [n for n in nodes if validate_chat_node(n, ids)]
-    i_len = len(goes_to_chat)
-    if i_len > 0:
-        print(f'new chat: {i_len}')
-        for blank_node in goes_to_chat:
-            current.current_chat, text = process_relative_block(util, nodes, edges, blank_node, file, note_root)
-            print(f'begin chat : {text} , update it to {current.current_chat}')
-            context = create_message_chain(blank_node, nodes, edges, note_root)
-            # print(context)
-            print_context(context)
-            util.chat(text, context)
-            time.sleep(2)
-    else:
-        pass
-    current.current_chat = ''
+    util.complete_obsidian_chat(file, note_root)
 
 
 def begin_observe(directory_to_scan):
@@ -151,4 +124,4 @@ def process_files(file_path, **kwargs):
             process_canvas_file(file_path, **kwargs)
         except Exception as e:
             print('processing file error')
-            print(e)
+            raise e

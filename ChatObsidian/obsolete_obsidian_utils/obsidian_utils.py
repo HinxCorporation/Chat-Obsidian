@@ -1,5 +1,85 @@
-from .common import *
 from .chat_bot_util import *
+from .common import *
+
+
+def create_new_link_id():
+    return "ai_" + generate_uuid()
+
+
+def generate_obsidian_id(role=''):
+    if not role:
+        return generate_uuid()
+    return f"{role}_{generate_uuid()}"
+
+
+def obsidian_read_bot_response(file, wdir):
+    f = obsidian_best_match_file(file, wdir)
+    try:
+        if f is None or not f:
+            return f"Could not find file from {wdir} for {file}"
+        if os.path.exists(f):
+            with open(f, 'r', encoding='utf-8') as file:
+                return file.read()
+        return f"response file missing :{file} :{wdir} :{f}"
+    except Exception as e:
+        return "read response failed"
+
+
+def obsidian_read_file(file, wdir):
+    f = obsidian_best_match_file(file, wdir)
+    try:
+        if os.path.exists(f):
+            with open(f, 'r', encoding='utf-8') as file:
+                return f"{file}:\n{file.read()}"
+    except:
+        pass
+    return f"{file}: file not found or cannot read (under {wdir})"
+
+
+def obsidian_best_match_file(file, wdir):
+    """
+    find best match file under the work dir
+    """
+    if os.path.exists(file):
+        return file
+    try:
+        if wdir is None or not wdir:
+            raise Exception(f'Root folder is null, unable to search file:{file}')
+
+        # join resolution
+        full_dir = os.path.join(wdir, file)
+        if os.path.exists(full_dir):
+            return full_dir
+
+        # collect all files under the wdir with recursive=True extension with md or canvas
+        files = [os.path.join(wdir, f) for f in os.listdir(wdir) if
+                 os.path.isfile(os.path.join(wdir, f)) and (f.endswith('.md') or f.endswith('.canvas'))]
+        # find the first file name or name without extension that matches the given file name
+        for f in files:
+            if os.path.basename(f) == file or os.path.splitext(os.path.basename(f))[0] == os.path.splitext(file)[0]:
+                return f
+    except:
+        pass
+    print(f'list file failure: {file} in {wdir}')
+    return ''
+
+
+def obsidian_read_node(node) -> [str, []]:
+    text = node.get('text', '')
+    if not text:
+        return "", []
+    if text.startswith('system:'):
+        text = text[7:].strip()
+    elif text.startswith('file:'):
+        text = text[5:].strip()
+    # get contents from [[ and ]] using regex
+    pattern = r'\[\[(.*?)\]\]'
+    matches = re.findall(pattern, text)
+    # trim text to remove the matched pattern
+    text = re.sub(pattern, '', text)
+    # read file list from the matched files
+    files = [m.strip() for m in matches if m.strip()]
+    return text, files
 
 
 def process_relative_block(util, nodes, edges, blank_node, file, obsidian_dir):
@@ -18,13 +98,42 @@ def process_relative_block(util, nodes, edges, blank_node, file, obsidian_dir):
     full_path = os.path.join(canvas_folder, f'dialog\\{canvasName}.ai.assets',
                              parse_to_filename(text, 46) + f'.md')
     # relative_file = 'AI-Chat/dialog/{canvasName}.ai.assets/' + util.parse_to_filename(text, 46) + f'.md'
-    relative_file = os.path.relpath(str(full_path), obsidian_dir).replace('\\', '/')
-    new_id = generate_uuid()
-    trans_id = generate_uuid()
+    relative_file = get_relative_file_obsidian(full_path, obsidian_dir)
+
+    currentNode, trans = create_response_node(blank_node, relative_file)
+    y_assistant, chat_color = util.get_color('assistant_dialog')
+    if y_assistant:
+        currentNode = {**currentNode, "color": chat_color}
+        trans = {**trans, "color": chat_color}
+
+    blank_node['text'] = text
+    b_id = blank_node['id']
+    if '_' not in b_id:
+        blank_node['id'] = f"{USER_ROLE}_{b_id}"
+    y_user, user_color = util.get_color('user_dialog')
+    if y_user and user_color != '0':
+        # set or add color field as color
+        blank_node['color'] = user_color
+
+    nodes.append(currentNode)
+    edges.append(trans)
+
+    y, c = util.get_color('system_dialog')
+    flush_canvas_file(file, nodes, edges, y, c)
+    return full_path, text
+
+
+def get_relative_file_obsidian(full_path, obsidian_dir):
+    return os.path.relpath(str(full_path), obsidian_dir).replace('\\', '/')
+
+
+def create_response_node(blank_node, file):
+    trans_id = generate_obsidian_id("ai-response")
     # current_chat = obsidian_dir + '/' + relative_file
 
+    new_id = generate_obsidian_id(BOT_ROLE)
     # config rectangle
-    offset_y = 5
+    offset_y = 15
     new_wid = 880
     new_hei = 600
     ori_x = blank_node.get('x', 0)
@@ -34,7 +143,6 @@ def process_relative_block(util, nodes, edges, blank_node, file, obsidian_dir):
     new_x = ori_x + ori_width - new_wid
     new_y = ori_y + ori_height + offset_y
     # chat_color = '#7e38ff'
-    y_assistant, chat_color = util.get_color('assistant_dialog')
 
     currentNode = {
         'id': new_id,
@@ -43,7 +151,7 @@ def process_relative_block(util, nodes, edges, blank_node, file, obsidian_dir):
         'width': new_wid,
         'height': new_hei,
         'type': 'file',
-        'file': relative_file
+        'file': file
         # ,
         # "color": chat_color
     }
@@ -56,20 +164,13 @@ def process_relative_block(util, nodes, edges, blank_node, file, obsidian_dir):
         # ,
         # "color": chat_color
     }
-    if y_assistant:
-        currentNode = {**currentNode, "color": chat_color}
-        trans = {**trans, "color": chat_color}
+    return currentNode, trans
 
-    blank_node['text'] = text
-    y_user, user_color = util.get_color('user_dialog')
-    if y_user and user_color != '0':
-        # set or add color field as color
-        blank_node['color'] = user_color
 
-    nodes.append(currentNode)
-    edges.append(trans)
-
-    y_system, system_color = util.get_color('system_dialog')
+def flush_canvas_file(file, nodes, edges, y_system, system_color):
+    """
+    flush canvas file with new nodes and edges
+    """
     if y_system:
         for node in nodes:
             if node.get('type') == 'text':
@@ -80,7 +181,6 @@ def process_relative_block(util, nodes, edges, blank_node, file, obsidian_dir):
     # Write the updated graph data back to the file
     with open(file, 'w', encoding='utf-8') as f:
         json.dump({'nodes': nodes, 'edges': edges}, f)
-    return full_path, text
 
 
 def get_pre(current, nodes, edges):
@@ -108,10 +208,45 @@ def pre_chain(current, nodes, edges, chain):
     return chain
 
 
+def read_node_content(node, wdir):
+    if node['type'] == 'file':
+        relative_file = node['file']
+        file_path = os.path.join(wdir, relative_file)
+        try:
+            with open(file_path, 'r', encoding='utf-8') as f:
+                return f.read()
+        except:
+            return 'missing reference message'
+    elif node['type'] == 'text':
+        # text may contains extra order
+        return str(node['text'])
+
+
+def node_to_message_base_on_node_id(node, wdir):
+    node_id = node['id']
+    role = node_id[0:node_id.index('_')]
+    content = read_node_content(node, wdir)
+    if role in [USER_ROLE, BOT_ROLE, SYS_ROLE]:
+        return {
+            'block_type': 'text',
+            'role': role,
+            'content': content
+        }
+    return {
+        'block_type': 'unknown',
+        'role': role,
+        'content': content
+    }
+
+
 def node_to_message(node, wdir):
     # work dir is wdir , reference file under the work dir.
     # {"id":"1","type":"text","text":"文","color":"#rrggbb"},
     # {"x":-482,"y":-415,"width":382,"height":60}
+    node_id = node['id']
+    if '_' in node_id:
+        return node_to_message_base_on_node_id(node, wdir)
+    # the resolution base on node type
     if node['type'] == 'file':
         relative_file = node['file']
         file_path = os.path.join(wdir, relative_file)
@@ -121,14 +256,32 @@ def node_to_message(node, wdir):
                 return {'content': content,
                         "role": "assistant"}
         except:
-            return {'content': 'missing message',
+            return {'content': 'missing reference message',
                     "role": "system"}
     elif node['type'] == 'text':
         content = str(node['text'])
         return process_text_node(content, wdir)
 
 
+def create_node_chain(current, nodes, edges):
+    """
+    complete the chain from current node to the beginning of the graph ,
+    current node is excluded.
+    returns node chain
+    """
+    prev = get_pre(current, nodes, edges)
+    if prev:
+        return [*pre_chain(prev, nodes, edges, []), prev]
+    else:
+        return []
+
+
 def create_message_chain(current, nodes, edges, wdir):
+    """
+    complete the chain from current node to the beginning of the graph ,
+    current node is excluded.
+    returns washed message chain
+    """
     prev = get_pre(current, nodes, edges)
     if prev:
         # chain = [prev, *pre_chain(prev, nodes, edges, [])]
@@ -140,6 +293,7 @@ def create_message_chain(current, nodes, edges, wdir):
 
 
 def validate_chat_node(node, from_ids):
+    """validate a chat node, if it is free to use and not empty"""
     free_used = node['id'] not in from_ids
     if not free_used:
         return False
