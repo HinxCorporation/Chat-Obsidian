@@ -46,11 +46,16 @@ class ChatUtil:
         """
 
         # Needs to block if file continues edit
-
+        nodes = []
+        edges = []
         with open(canvas_file, 'r', encoding='utf-8') as f:
-            json_dat = json.load(f)
-            nodes = json_dat['nodes']
-            edges = json_dat['edges']
+            try:
+                json_dat = json.load(f)
+                # maybe blank file in this case
+                nodes = json_dat['nodes']
+                edges = json_dat['edges']
+            except:
+                pass
 
         ids = set()
         for e in edges:
@@ -60,15 +65,8 @@ class ChatUtil:
         goes_to_chat = [n for n in nodes if validate_chat_node(n, ids)]
         i_len = len(goes_to_chat)
         if i_len > 0:
-            print(f'new chat: {i_len}')
             for blank_node in goes_to_chat:
                 self.bot.complete_obsidian_chat(blank_node['id'], canvas_file, nodes, edges, wdir)
-                # current.current_chat, text = process_relative_block(util, nodes, edges, blank_node, file, note_root)
-                # print(f 'begin chat : {text} , update it to {current.current_chat}')
-                # context = create_message_chain(blank_node, nodes, edges, note_root)
-                # # print(context)
-                # print_context(context)
-                # util.chat(text, context)
                 time.sleep(2)
         else:
             pass

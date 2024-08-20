@@ -1,7 +1,5 @@
-import requests
 from PyAissistant.PyChatBot.Chat import *
 from PyAissistant.PyChatBot.deep_seek_bot import DeepSeekBot
-from PyAissistant.PyChatBot.deep_seek_message_process import DeepSeekMessage
 
 from ..obsolete_obsidian_utils.obsidian_utils import *
 
@@ -9,7 +7,7 @@ from ..obsolete_obsidian_utils.obsidian_utils import *
 class InsChatBot(DeepSeekBot):
 
     def __init__(self, color_provider, file_title='-'):
-        super().__init__(self.write_out_obsidian)
+        super().__init__(self.write_out_obsidian, function_call_feat=True)
         self.current_response_id = ''
         self.append_tool_call_result = False
         self.current_dir = None
@@ -19,9 +17,21 @@ class InsChatBot(DeepSeekBot):
         self.title = file_title
         self.color_provider = color_provider
         self.has_create_tool_call_node = False
+        self.last_write_on = ''
+
+    def change_bot_name(self, new_bot_name) -> str:
+        """
+        change current bot name for system
+        """
+        self.title = new_bot_name
+        return f'bot has change name to {new_bot_name}'
+
+    def append_global_exposed_functions(self):
+        super().append_global_exposed_functions()
+        self.functions.append(self.change_bot_name)
 
     def write_out_obsidian(self, word):
-        target_file = self.get_current_append_file()
+        target_file = self.last_write_on
         folder, _ = os.path.split(target_file)
         os.makedirs(folder, exist_ok=True)
         # there may be an IO exception.
@@ -29,12 +39,12 @@ class InsChatBot(DeepSeekBot):
             flush_char_f.write(word)
         print(word, end='')
 
-    def get_current_append_file(self, type=''):
+    def get_current_append_file(self, create_type=''):
         canvas_folder, canvasName = os.path.split(self.current_canvas_file)
         return os.path.join(canvas_folder,
                             f'dialog\\{canvasName}.ai.assets',
                             self.current_response_id,
-                            f'{self.title}{type}.md')
+                            f'{self.title}{create_type}.md')
 
     def get_response_id_from_line(self, line):
         if not line:
@@ -112,11 +122,10 @@ class InsChatBot(DeepSeekBot):
     def execute_func(self, function_tool, **kwargs):
         tool_details = function_tool['function']
         function_name = tool_details['name']
-        # logging.info(f" - (ai) Executing function: {function_name} with args: {kwargs} , go for {function_desc}")
         matched_func = self.get_local_functions_by_name(function_name)
         result = self.__exec_ai(matched_func, function_name, **kwargs)
         if self.append_tool_call_result:
-            call_result_file = self.get_current_append_file(type='.call_result')
+            call_result_file = self.get_current_append_file(create_type='.call_result')
             # ensure link
             if not self.has_create_tool_call_node:
                 self.has_create_tool_call_node = True
@@ -144,7 +153,7 @@ class InsChatBot(DeepSeekBot):
         padding = 20
         new_x = ori_x - new_wid - padding * 3
         new_y = ori_y
-
+        print(f'tool call : {file}')
         _node = {
             "id": "group-" + _call_n_id,
             "x": new_x,
@@ -239,7 +248,8 @@ class InsChatBot(DeepSeekBot):
             node['color'] = user_color
 
         # step 2 , create a wink node to link to response node
-        rel_file = get_relative_file_obsidian(self.get_current_append_file(), os.path.abspath(self.current_dir))
+        self.last_write_on = self.get_current_append_file()
+        rel_file = get_relative_file_obsidian(self.last_write_on, os.path.abspath(self.current_dir))
         new_node, new_trans = create_response_node(node, rel_file)
         nodes.append(new_node)
         edges.append(new_trans)
