@@ -17,10 +17,14 @@ Python Obsidian Chat Assistant - make obsidian able to chat like GPT.
 - [x] Using file block
 - [x] Chat RE-Direct new
 - [x] Chat via Console
-- [ ] RAG - support [ In coming ]
-- [ ] langchain - support [ In coming ]
+- [ ] RAG - support [ Give up ]
+- [x] langchain - support
 - [ ] plugin as Obsidian [ In coming ]
 - [x] Local tool call features 2024/08/15 `require new PyAissistant package , needs to reinstall requirements`
+- [x] using extend executive plugin
+- [x] add multi-threading support
+- [x] add Global chat prompt support
+- [x] add note title support
 
 ## Notice
 
@@ -28,7 +32,7 @@ Python Obsidian Chat Assistant - make obsidian able to chat like GPT.
 - You can set up `runs` to powershell alias, it will be a smart choice
 - Nerd font is not required. if you want it clear on console, remove them from config
 - `requirements` has to be installed
-- At lease `PyAissistant 0.1.12` has installed  [![PyPI Version](https://img.shields.io/pypi/v/pyaissistant.svg)](https://pypi.org/project/pyaissistant/)
+- At lease `PyAissistant latest` has installed  [![PyPI Version](https://img.shields.io/pypi/v/pyaissistant.svg)](https://pypi.org/project/pyaissistant/)
 [![PyPI Downloads](https://img.shields.io/pypi/dm/pyaissistant.svg)](https://pypi.org/project/pyaissistant/)
 
 ## New Continue DEV
