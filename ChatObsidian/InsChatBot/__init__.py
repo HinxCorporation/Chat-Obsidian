@@ -1,23 +1,33 @@
-from PyAissistant.PyChatBot.Chat import *
+import json
+import os
+
+from PyAissistant.PyChatBot.Chat import Message, Chat
 from PyAissistant.PyChatBot.deep_seek_bot import DeepSeekBot
 
-from ..obsolete_obsidian_utils.obsidian_utils import *
+from ..obsolete_obsidian_utils.obsidian_utils import generate_uuid, obsidian_read_bot_response, obsidian_read_node, \
+    obsidian_read_file, BOT_ROLE, USER_ROLE, get_relative_file_obsidian, flush_canvas_file, create_response_node, \
+    create_node_chain
 
 
 class InsChatBot(DeepSeekBot):
 
     def __init__(self, color_provider, file_title='-'):
         super().__init__(self.write_out_obsidian, function_call_feat=True)
+        # options for obsidian assistant
         self.current_response_id = ''
-        self.append_tool_call_result = False
+        self.append_tool_call_result = True
         self.current_dir = None
         self.current_canvas_file = None
         self.current_node = None
         self.blink_node = None
-        self.title = file_title
-        self.color_provider = color_provider
         self.has_create_tool_call_node = False
         self.last_write_on = ''
+        # options for chatbot
+        self.title = file_title
+        self.color_provider = color_provider
+        self.default_prompt = ("As an AI chatbot in Obsidian, your job is to assist the user by generating responses "
+                               "directly onto the canvas. Keep it straightforward, helpful, and organized.If there is "
+                               "a complex task, finished it step by step.")
 
     def change_bot_name(self, new_bot_name) -> str:
         """
@@ -26,9 +36,11 @@ class InsChatBot(DeepSeekBot):
         self.title = new_bot_name
         return f'bot has change name to {new_bot_name}'
 
-    def append_global_exposed_functions(self):
-        super().append_global_exposed_functions()
-        self.functions.append(self.change_bot_name)
+    def setup_function_tools(self):
+        # super().setup_function_tools()
+        # self.executor.extend_tools(list_exposed_functions())
+        self.executor.add_tool(self.change_bot_name)
+        pass
 
     def write_out_obsidian(self, word):
         target_file = self.last_write_on
@@ -91,7 +103,7 @@ class InsChatBot(DeepSeekBot):
                 system_prompt += f"{txt}\n"
             system_prompt = system_prompt.strip()
         if not system_prompt:
-            system_prompt = "You are a good assistant, if there is a complex task, finished it step by step."
+            system_prompt = self.default_prompt + ", Now you are play with Assistant named " + self.title
         if len(file_ref_nodes) > 0:
             for node in file_ref_nodes:
                 _, files = obsidian_read_node(node)
@@ -122,23 +134,36 @@ class InsChatBot(DeepSeekBot):
     def execute_func(self, function_tool, **kwargs):
         tool_details = function_tool['function']
         function_name = tool_details['name']
-        matched_func = self.get_local_functions_by_name(function_name)
-        result = self.__exec_ai(matched_func, function_name, **kwargs)
+        call_result_file = self.get_current_append_file(create_type='.call_result')
+        folder, _ = os.path.split(call_result_file)
+        os.makedirs(folder, exist_ok=True)
+
+        # before calling function
+        if not self.append_tool_call_result:
+            self.write_out_obsidian(f"\n> Working on `{function_name}` pls wait...")
+
+        # make function calls
+        exec_result = super().execute_func(function_tool, **kwargs)
+
+        # after function calls , write out call result to file.
+        with open(call_result_file, 'a', encoding='utf-8') as call_result_f:
+            call_result_f.write(f'-------------------------------------------\n')
+            call_result_f.write(f'#### call:{function_name}\n')
+            call_result_f.write(f'- input: {kwargs}\n')
+            call_result_f.write(f'- output: {exec_result}\n')
+            call_result_f.write(f'\n')
+
         if self.append_tool_call_result:
-            call_result_file = self.get_current_append_file(create_type='.call_result')
-            # ensure link
+            # ensure link had create or not.
             if not self.has_create_tool_call_node:
                 self.has_create_tool_call_node = True
                 self.create_tool_call_node(call_result_file)
-            folder, _ = os.path.split(call_result_file)
-            os.makedirs(folder, exist_ok=True)
-            with open(call_result_file, 'w', encoding='utf-8') as call_result_f:
-                call_result_f.write(f'-------------------------------------------\n')
-                call_result_f.write(f'#### call:{function_name}\n')
-                call_result_f.write(f'- input: {kwargs}\n')
-                call_result_f.write(f'- output: {result}\n')
-                call_result_f.write(f'\n')
-        return result
+        else:
+            relative_file = get_relative_file_obsidian(os.path.abspath(call_result_file),
+                                                       os.path.abspath(self.current_dir))
+            self.write_out_obsidian(f'\n> Done. [RES.]({relative_file}) \n\n')
+
+        return exec_result
 
     def create_tool_call_node(self, file):
         """
@@ -180,6 +205,7 @@ class InsChatBot(DeepSeekBot):
             'fromNode': _u_n_id,
             'toNode': _call_n_id,
             'fromSide': 'bottom',
+            "color": "3",
             'toSide': 'top'
         }
         _link_2 = {
@@ -250,7 +276,8 @@ class InsChatBot(DeepSeekBot):
         # step 2 , create a wink node to link to response node
         self.last_write_on = self.get_current_append_file()
         rel_file = get_relative_file_obsidian(self.last_write_on, os.path.abspath(self.current_dir))
-        new_node, new_trans = create_response_node(node, rel_file)
+        _, color_str = self.color_provider('assistant_dialog')
+        new_node, new_trans = create_response_node(node, rel_file, color_str)
         nodes.append(new_node)
         edges.append(new_trans)
         self.blink_node = new_node
@@ -265,3 +292,26 @@ class InsChatBot(DeepSeekBot):
 
         # step 4 , begin chat with bot
         self.chat(text)
+        print(' [DONE]')
+
+    def set_config(self, botName, model_path, temperature, top_p, max_length, prompt):
+        if botName:
+            self.title = botName
+        if model_path:
+            self.model = model_path
+        if temperature:
+            self.temperature = temperature
+        if top_p:
+            self.top_p = top_p
+        if max_length:
+            self.max_tokens = max_length
+        if temperature:
+            self.temperature = temperature
+        if top_p:
+            self.top_p = top_p
+        if max_length:
+            self.max_tokens = max_length
+        if prompt:
+            self.default_prompt = prompt
+            # print("Prompt:" + '\033[32m' + prompt + '\033[0m')
+        pass

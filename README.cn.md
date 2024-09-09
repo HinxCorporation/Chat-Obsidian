@@ -4,13 +4,9 @@
 Python Obsidian Chat Assistant - 使 Obsidian 能够像 GPT 一样聊天。
 </p>
 
-<br>
-
 <p align=center>
 <a href="https://github.com/HinxCorporation/Chat-Obsidian/blob/master/README.md">English</a> • <b>简体中文</b>
 </p>
-
-<br>
 
 ## 功能
 

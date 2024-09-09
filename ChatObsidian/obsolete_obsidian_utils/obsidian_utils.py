@@ -1,5 +1,9 @@
-from .chat_bot_util import *
-from .common import *
+import json
+import os
+import re
+
+from .chat_bot_util import generate_uuid, process_text_node, USER_ROLE, BOT_ROLE, SYS_ROLE
+from .common import parse_to_filename
 
 
 def create_new_link_id():
@@ -13,6 +17,9 @@ def generate_obsidian_id(role=''):
 
 
 def obsidian_read_bot_response(file, wdir):
+    """
+    read bot response from file
+    """
     f = obsidian_best_match_file(file, wdir)
     try:
         if f is None or not f:
@@ -51,17 +58,45 @@ def obsidian_best_match_file(file, wdir):
         if os.path.exists(full_dir):
             return full_dir
 
-        # collect all files under the wdir with recursive=True extension with md or canvas
-        files = [os.path.join(wdir, f) for f in os.listdir(wdir) if
-                 os.path.isfile(os.path.join(wdir, f)) and (f.endswith('.md') or f.endswith('.canvas'))]
+        files = obsidian_collect_files(wdir)
         # find the first file name or name without extension that matches the given file name
         for f in files:
+            folder, filename = os.path.split(f)
+            name, ext = os.path.splitext(filename)
+            if name == file:
+                return f
             if os.path.basename(f) == file or os.path.splitext(os.path.basename(f))[0] == os.path.splitext(file)[0]:
                 return f
-    except:
-        pass
-    print(f'list file failure: {file} in {wdir}')
+    except Exception as e:
+        print(e)
+    print(f'list file failure: "{file}" in "{wdir}"')
     return ''
+
+
+def is_obsidian_file(file):
+    """
+    check if the file is an obsidian file
+    """
+    return file.endswith('.md') or file.endswith('.canvas')
+
+
+def obsidian_collect_files(wdir, recursive=True):
+    """
+    collect all files under the wdir with recursive=True extension with md or canvas
+    """
+    files = []
+    for entry in os.scandir(wdir):
+        if entry.is_file() and is_obsidian_file(entry.name):
+            files.append(entry.path)
+        elif entry.is_dir() and recursive:
+            # .ssh and .git .ignore* returns
+            if entry.name in ['.ssh', '.git', '.ignore', '.obsidian', '.obsidian_plugins', '.obsidian_cache',
+                              '.obsidian_plugins_cache']:
+                continue
+            if entry.name.startswith('.ignore'):
+                continue
+            files.extend(obsidian_collect_files(entry.path, True))
+    return files
 
 
 def obsidian_read_node(node) -> [str, []]:
@@ -127,7 +162,7 @@ def get_relative_file_obsidian(full_path, obsidian_dir):
     return os.path.relpath(str(full_path), obsidian_dir).replace('\\', '/')
 
 
-def create_response_node(blank_node, file):
+def create_response_node(blank_node, file, color_str: str = None):
     trans_id = generate_obsidian_id("ai-response")
     # current_chat = obsidian_dir + '/' + relative_file
 
@@ -142,7 +177,9 @@ def create_response_node(blank_node, file):
     ori_height = blank_node.get('height', 0)
     new_x = ori_x + ori_width - new_wid
     new_y = ori_y + ori_height + offset_y
-    # chat_color = '#7e38ff'
+    # chat_color =
+    if not color_str:
+        color_str = '#7e38ff'
 
     currentNode = {
         'id': new_id,
@@ -151,18 +188,16 @@ def create_response_node(blank_node, file):
         'width': new_wid,
         'height': new_hei,
         'type': 'file',
-        'file': file
-        # ,
-        # "color": chat_color
+        'file': file,
+        "color": color_str
     }
     trans = {
         'id': trans_id,
         'fromNode': blank_node['id'],
         'toNode': new_id,  # Assuming you want to connect to the original node
         'fromSide': 'bottom',
-        'toSide': 'top'
-        # ,
-        # "color": chat_color
+        'toSide': 'top',
+        "color": color_str
     }
     return currentNode, trans
 

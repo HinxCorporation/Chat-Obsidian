@@ -1,11 +1,13 @@
+import configparser
 import os.path
+import time
 from pathlib import Path
 
 from watchdog.events import PatternMatchingEventHandler
 from watchdog.observers import Observer
 
-from .chat_obsidian import *
-from .obsolete_obsidian_utils.chatutil import *
+from .ObsidianShared import current
+from .obsolete_obsidian_utils.chatutil import ChatUtil
 
 
 class WatcherHandler(PatternMatchingEventHandler):
@@ -52,7 +54,6 @@ def process_canvas_file(file, util: ChatUtil, note_root):
 def begin_observe(directory_to_scan):
     if not os.path.exists(directory_to_scan):
         os.makedirs(directory_to_scan)
-    print('Console Gonna stop ctrl + c to exit')
     event_handler = WatcherHandler()
     observer = Observer()
     print(f'notes listen will runs on :{directory_to_scan}')
@@ -108,7 +109,7 @@ def run_observers(observers, **kwargs):
         while True:
             while current.queue.has_next():
                 process_files(current.queue.dequeue(), **kwargs)
-            time.sleep(0.5)
+            time.sleep(2)
     except KeyboardInterrupt:
         for observer in observers:
             observer.stop()

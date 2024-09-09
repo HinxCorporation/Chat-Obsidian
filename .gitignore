@@ -14,3 +14,13 @@ response.dat
 [Tt]est
 archived
 response.json
+
+# custom ignores
+ignore*
+
+# ai owns dirs
+ai_*
+bots*
+
+# other logs
+*_logs*

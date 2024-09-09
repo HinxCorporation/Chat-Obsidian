@@ -1,17 +1,53 @@
+from PyAissistant.Extension.ai_extension import ai_exposed_function
 from PyAissistant.PyChatBot.chat_api import ChatBot
 from PyAissistant.PyChatBot.deep_seek_bot import DeepSeekBot
-from PyAissistant.Extension.ai_extension import ai_exposed_function
+
 from .console_chat_extension import *
+from ..ConsoleChatBot import ConsoleChatBot
 
 
 # from .deep_seek_bot import *
 
 
 class ConsoleChat:
+
+    @staticmethod
+    @ai_exposed_function
+    def write_file(relative_path, text_content):
+        """
+        method exposed to Ai assistant, writes text content to a file in the workspace
+        :param relative_path: relative path to the file from the workspace root
+        :param text_content: text content to be written to the file
+        :return: success message
+        """
+        relative_path = os.path.join("ignore_AI_Workspace", relative_path)
+        full_path = os.path.abspath(relative_path)
+        if not os.path.exists(os.path.dirname(full_path)):
+            os.makedirs(os.path.dirname(full_path))
+        with open(full_path, 'w', encoding='utf-8') as f:
+            f.write(text_content)
+        return f"File {relative_path} created successfully."
+
+    @staticmethod
+    @ai_exposed_function
+    def read_file(relative_path):
+        """
+        method exposed to Ai assistant, reads text content from a file in the workspace
+        :param relative_path: relative path to the file from the workspace root
+        :return: text content of the file
+        """
+        relative_path = os.path.join("ignore_AI_Workspace", relative_path)
+        full_path = os.path.abspath(relative_path)
+        if not os.path.exists(full_path):
+            return f"File {relative_path} does not exist."
+        with open(full_path, 'r', encoding='utf-8') as f:
+            content = f.read()
+        return content
+
     def __init__(self, user_name="You", bot_name="Bot", system_name='system', fm_name='file'):
         self.bot_msg: str = ''
         # utils needs an output method with a token input
-        self.bot: ChatBot = DeepSeekBot(post_words=self.print_console_word)
+        self.bot: ChatBot = ConsoleChatBot(post_words=self.print_console_word)
 
         self.running = True
         self.user_name = user_name
@@ -26,6 +62,11 @@ class ConsoleChat:
         method exposed to Ai assistant , returns current bot name
         """
         return self.bot_name
+
+    @staticmethod
+    def print_function_call_result( result):
+        print(Fore.GREEN + result)
+        print(Fore.LIGHTGREEN_EX)
 
     def print_console_word(self, word: str):
         print(word, end='', flush=True)
