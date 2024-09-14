@@ -26,6 +26,8 @@ Python Obsidian Chat Assistant - make obsidian able to chat like GPT.
 - [x] add Global chat prompt support
 - [x] add note title support
 - [x] Continue Dev
+- [x] Custom executors support
+- [x] Custom Workflow support
 - [x] ElasticSearch support
 - [x] Wiki query support
   
