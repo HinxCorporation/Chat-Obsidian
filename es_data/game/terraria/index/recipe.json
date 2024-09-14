@@ -1,0 +1,29 @@
+{
+  "mappings": {
+    "properties": {
+      "result_item": {
+        "type": "keyword"
+      },
+      "ingredients": {
+        "type": "nested",
+        "properties": {
+          "item": {
+            "type": "keyword"
+          },
+          "quantity": {
+            "type": "integer"
+          }
+        }
+      },
+      "crafting_station": {
+        "type": "keyword"
+      },
+      "category": {
+        "type": "keyword"
+      },
+      "wiki_page": {
+        "type": "keyword"
+      }
+    }
+  }
+}

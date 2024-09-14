@@ -1,5 +1,7 @@
-from .Chat import *
-from .chat_bot_util import *
+from PyAissistant import Message
+
+from .Chat import Chat
+from .chat_bot_util import generate_uuid, BOT_ROLE, SYS_ROLE, get_message
 
 
 class ChatBot_obs:

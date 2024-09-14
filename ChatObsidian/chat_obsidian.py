@@ -1,7 +1,7 @@
 # listen to a canvas file , and make sure all content has response.
 
 from .WatcherUtil import initialize_config, setup_observers, run_observers
-from .obsolete_obsidian_utils.chatutil import ChatUtil
+from .obsolete_obsidian_utils import ChatUtil
 
 
 def run():

@@ -1,0 +1,38 @@
+{
+  "mappings": {
+    "properties": {
+      "name": {
+        "type": "text"
+      },
+      "biome": {
+        "type": "keyword"
+      },
+      "health": {
+        "type": "integer"
+      },
+      "damage": {
+        "type": "integer"
+      },
+      "spawn_conditions": {
+        "type": "text"
+      },
+      "drops": {
+        "type": "nested",
+        "properties": {
+          "item": {
+            "type": "keyword"
+          },
+          "rarity": {
+            "type": "keyword"
+          }
+        }
+      },
+      "strategy_tips": {
+        "type": "text"
+      },
+      "wiki_page": {
+        "type": "keyword"
+      }
+    }
+  }
+}

@@ -5,3 +5,5 @@ watchdog~=4.0.1
 colorama~=0.4.6
 
 colorlog~=6.8.2
+
+elasticsearch~=8.15.1

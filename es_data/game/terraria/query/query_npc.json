@@ -1,0 +1,13 @@
+{
+  "query": {
+    "bool": {
+      "must": [
+        {
+          "term": {
+            "biomes_appears_in": "desert"
+          }
+        }
+      ]
+    }
+  }
+}

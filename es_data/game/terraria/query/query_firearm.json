@@ -1,0 +1,9 @@
+{
+  "query": {
+    "multi_match": {
+      "query": "firearm",
+      "fields": ["name", "category"],
+      "fuzziness": "AUTO"
+    }
+  }
+}

@@ -1,5 +1,5 @@
-from PyAissistant.PyChatBot.chat_api import ChatBot
-from PyAissistant.PyChatBot.deep_seek_bot import DeepSeekBot
+from PyAissistant import ChatBot, DeepSeekBot
+
 
 from ChatObsidian import chat_console
 

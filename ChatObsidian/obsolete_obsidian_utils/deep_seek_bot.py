@@ -1,10 +1,11 @@
 import configparser
+import json
 import logging
 
 import requests
 
 from .chat_api import ChatBot_obs
-from .chat_bot_util import *
+from .chat_bot_util import print_words, get_words_deep_seek_bot, generate_uuid
 
 
 class DeepSeekBot_obs(ChatBot_obs):
@@ -118,7 +119,7 @@ class DeepSeekBot_obs(ChatBot_obs):
 
         # from message stack line 0 read id
         try:
-            first_line = msg_stack.splitlines()[0][len(self.block_mark)+1:]
+            first_line = msg_stack.splitlines()[0][len(self.block_mark) + 1:]
             json_data = json.loads(first_line)
             uuid_tex = json_data.get('id')
         except:

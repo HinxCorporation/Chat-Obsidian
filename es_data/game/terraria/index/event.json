@@ -1,0 +1,27 @@
+{
+  "mappings": {
+    "properties": {
+      "name": {
+        "type": "text"
+      },
+      "duration": {
+        "type": "integer"
+      },
+      "trigger_conditions": {
+        "type": "text"
+      },
+      "biomes_affected": {
+        "type": "text"
+      },
+      "enemies_spawned": {
+        "type": "text"
+      },
+      "strategy_tips": {
+        "type": "text"
+      },
+      "wiki_page": {
+        "type": "keyword"
+      }
+    }
+  }
+}

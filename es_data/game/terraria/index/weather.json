@@ -1,0 +1,21 @@
+{
+  "mappings": {
+    "properties": {
+      "name": {
+        "type": "text"
+      },
+      "trigger_conditions": {
+        "type": "text"
+      },
+      "effect": {
+        "type": "text"
+      },
+      "biomes_affected": {
+        "type": "text"
+      },
+      "wiki_page": {
+        "type": "keyword"
+      }
+    }
+  }
+}

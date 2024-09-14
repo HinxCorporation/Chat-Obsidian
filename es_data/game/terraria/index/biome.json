@@ -1,0 +1,21 @@
+{
+  "mappings": {
+    "properties": {
+      "name": {
+        "type": "text"
+      },
+      "environment": {
+        "type": "keyword"
+      },
+      "enemies": {
+        "type": "text"
+      },
+      "unique_items": {
+        "type": "text"
+      },
+      "bosses": {
+        "type": "text"
+      }
+    }
+  }
+}

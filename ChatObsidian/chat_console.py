@@ -1,6 +1,8 @@
 import configparser
 
-from .obsolete_obsidian_utils.chat_on_console import *
+from colorama import Style
+
+from .obsolete_obsidian_utils import clear_console, ConsoleChat, system_out, read_config_file, greet, bye
 
 
 def run():

@@ -1,0 +1,70 @@
+{
+  "mappings": {
+    "properties": {
+      "name": {
+        "type": "text"
+      },
+      "type": {
+        "type": "keyword"
+      },
+      "damage": {
+        "type": "integer"
+      },
+      "rarity": {
+        "type": "keyword"
+      },
+      "sell_price": {
+        "type": "float"
+      },
+      "buy_price": {
+        "type": "float"
+      },
+      "crafting_recipe": {
+        "type": "object",
+        "properties": {
+          "item": {
+            "type": "keyword"
+          },
+          "quantity": {
+            "type": "integer"
+          }
+        }
+      },
+      "category": {
+        "type": "keyword"
+      },
+      "dropped_by": {
+        "type": "keyword"
+      },
+      "related_events": {
+        "type": "keyword"
+      },
+      "modifiers": {
+        "type": "nested",
+        "properties": {
+          "name": {
+            "type": "keyword"
+          },
+          "damage_modifier": {
+            "type": "float"
+          },
+          "speed_modifier": {
+            "type": "float"
+          },
+          "defense_modifier": {
+            "type": "float"
+          },
+          "critical_chance_modifier": {
+            "type": "float"
+          },
+          "other_effects": {
+            "type": "text"
+          }
+        }
+      },
+      "wiki_page": {
+        "type": "keyword"
+      }
+    }
+  }
+}

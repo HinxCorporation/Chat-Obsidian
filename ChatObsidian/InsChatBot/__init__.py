@@ -4,7 +4,7 @@ import os
 from PyAissistant.PyChatBot.Chat import Message, Chat
 from PyAissistant.PyChatBot.deep_seek_bot import DeepSeekBot
 
-from ..obsolete_obsidian_utils.obsidian_utils import generate_uuid, obsidian_read_bot_response, obsidian_read_node, \
+from ..obsolete_obsidian_utils import generate_uuid, obsidian_read_bot_response, obsidian_read_node, \
     obsidian_read_file, BOT_ROLE, USER_ROLE, get_relative_file_obsidian, flush_canvas_file, create_response_node, \
     create_node_chain
 
@@ -54,7 +54,7 @@ class InsChatBot(DeepSeekBot):
     def get_current_append_file(self, create_type=''):
         canvas_folder, canvasName = os.path.split(self.current_canvas_file)
         return os.path.join(canvas_folder,
-                            f'dialog\\{canvasName}.ai.assets',
+                            f'dialog/{canvasName}.ai.assets',
                             self.current_response_id,
                             f'{self.title}{create_type}.md')
 

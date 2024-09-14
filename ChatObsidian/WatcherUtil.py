@@ -7,7 +7,7 @@ from watchdog.events import PatternMatchingEventHandler
 from watchdog.observers import Observer
 
 from .ObsidianShared import current
-from .obsolete_obsidian_utils.chatutil import ChatUtil
+from .obsolete_obsidian_utils import ChatUtil
 
 
 class WatcherHandler(PatternMatchingEventHandler):
@@ -62,19 +62,7 @@ def begin_observe(directory_to_scan):
     return observer
 
 
-def initialize_config():
-    config_file = Path('config.ini')
-    if not config_file.is_file():
-        print('config.ini file does not exist')
-        return False, '', ''
-
-    config = configparser.ConfigParser()
-    try:
-        config.read(config_file, encoding='utf-8')
-    except configparser.ParsingError as e:
-        print('Could not parse config.ini:', str(e))
-        return False, '', ''
-
+def initialize_with_config(config):
     try:
         note_root = Path(config.get('setting', 'note_root', fallback='')).resolve(strict=True)
     except FileNotFoundError as e:
@@ -92,8 +80,21 @@ def initialize_config():
 
     if not chat_folders:
         chat_folders = 'AI-Chat'
-
     return True, str(note_root), chat_folders.split(',')
+
+
+def initialize_config():
+    config_file = Path('config.ini')
+    if not config_file.is_file():
+        print('config.ini file does not exist')
+        return False, '', ''
+    config = configparser.ConfigParser()
+    try:
+        config.read(config_file, encoding='utf-8')
+    except configparser.ParsingError as e:
+        print('Could not parse config.ini:', str(e))
+        return False, '', ''
+    return initialize_with_config(config)
 
 
 def setup_observers(note_root, folders_list):

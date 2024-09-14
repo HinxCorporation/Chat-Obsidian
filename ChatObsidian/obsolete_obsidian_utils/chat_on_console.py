@@ -1,12 +1,10 @@
 from PyAissistant.Extension.ai_extension import ai_exposed_function
 from PyAissistant.PyChatBot.chat_api import ChatBot
-from PyAissistant.PyChatBot.deep_seek_bot import DeepSeekBot
-
-from .console_chat_extension import *
+import os
+from colorama import Fore, Style
 from ..ConsoleChatBot import ConsoleChatBot
-
-
-# from .deep_seek_bot import *
+from .console_chat_extension import process_ai_message, out_ai_role_msg, greet, tips_out, is_quit
+from .chat_bot_util import clear_console
 
 
 class ConsoleChat:

@@ -2,7 +2,8 @@
 
 from colorama import Fore, Back, Style
 
-from .chat_bot_util import *
+from .chat_bot_util import PREFIX_LENGTH, SYS_ROLE, create_system_message
+
 
 USE_NERD_FONT = False
 

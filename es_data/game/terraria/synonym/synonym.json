@@ -1,0 +1,34 @@
+{
+  "settings": {
+    "analysis": {
+      "filter": {
+        "synonym_filter": {
+          "type": "synonym",
+          "synonyms": [
+            "gun, firearm, ranged weapon",
+            "sword, blade, melee weapon",
+            "staff, magic weapon, wand"
+          ]
+        }
+      },
+      "analyzer": {
+        "synonym_analyzer": {
+          "tokenizer": "standard",
+          "filter": ["synonym_filter"]
+        }
+      }
+    }
+  },
+  "mappings": {
+    "properties": {
+      "name": {
+        "type": "text",
+        "analyzer": "synonym_analyzer"
+      },
+      "category": {
+        "type": "text",
+        "analyzer": "synonym_analyzer"
+      }
+    }
+  }
+}

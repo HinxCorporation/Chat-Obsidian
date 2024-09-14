@@ -1,7 +1,6 @@
-from PyAissistant.PyChatBot.chat_api import ChatBot
-from PyAissistant.PyChatBot.deep_seek_bot import DeepSeekBot
+from PyAissistant import ChatBot, DeepSeekBot
 
-from ChatObsidian import chat_obsidian as obsidian
+from ChatObsidian import run_obsidian
 
 
 def list_all_functions():
@@ -11,4 +10,4 @@ def list_all_functions():
 
 
 if __name__ == '__main__':
-    obsidian.run()
+    run_obsidian()

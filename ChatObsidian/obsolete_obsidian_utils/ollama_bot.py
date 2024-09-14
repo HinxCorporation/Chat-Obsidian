@@ -1,7 +1,7 @@
+from PyAissistant import ChatBot
 from ollama_api import OllamaClient
 
-from .chat_api import ChatBot
-from .chat_bot_util import *
+from .chat_bot_util import try_get_allama_words, generate_uuid, print_words
 
 
 class OllamaBot(ChatBot):

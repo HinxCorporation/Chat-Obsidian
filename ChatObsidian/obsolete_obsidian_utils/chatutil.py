@@ -11,6 +11,26 @@ from .obsidian_utils import validate_chat_node
 from ..InsChatBot import InsChatBot
 
 
+def load_blank_nodes_from_canvas_file(canvas_file: str):
+    nodes = []
+    edges = []
+    with open(canvas_file, 'r', encoding='utf-8') as f:
+        try:
+            json_dat = json.load(f)
+            # maybe blank file in this case
+            nodes = json_dat['nodes']
+            edges = json_dat['edges']
+        except:
+            pass
+
+    ids = set()
+    for e in edges:
+        ids.add(e['fromNode'])
+
+    # find all none point chat node , then make handle.
+    return [n for n in nodes if validate_chat_node(n, ids)]
+
+
 class ObsidianBotInstance:
     util = None
     functions: list = []
@@ -46,9 +66,9 @@ class ObsidianBotInstance:
             sh = logging.StreamHandler()  # 创建控制台日志处理器
             fh = logging.FileHandler(filename=log_path, mode='a', encoding="utf-8")  # 创建日志文件处理器
             # 创建格式器
-            # fmt = logging.Formatter(
-            #     fmt="[%(asctime)s.%(msecs)03d] %(filename)s:%(lineno)d [%(levelname)s]: %(message)s",
-            #     datefmt='%Y-%m-%d  %H:%M:%S')
+            fmt = logging.Formatter(
+                fmt="[%(asctime)s.%(msecs)03d] %(filename)s:%(lineno)d [%(levelname)s]: %(message)s",
+                datefmt='%Y-%m-%d  %H:%M:%S')
 
             sh_fmt = colorlog.ColoredFormatter(
                 fmt="%(log_color)s[%(asctime)s.%(msecs)03d]-[%(levelname)s]: %(message)s",
@@ -56,7 +76,7 @@ class ObsidianBotInstance:
                 log_colors=log_colors_config)
             # 给处理器添加格式
             sh.setFormatter(fmt=sh_fmt)
-            fh.setFormatter(fmt=sh_fmt)
+            fh.setFormatter(fmt=fmt)
             # 给日志器添加处理器，过滤器一般在工作中用的比较少，如果需要精确过滤，可以使用过滤器
             logger.addHandler(sh)
             logger.addHandler(fh)
@@ -202,28 +222,12 @@ class ChatUtil:
         scan that file and make transitions
         """
         # Needs to block if file continues edit
-        nodes = []
-        edges = []
-        with open(canvas_file, 'r', encoding='utf-8') as f:
-            try:
-                json_dat = json.load(f)
-                # maybe blank file in this case
-                nodes = json_dat['nodes']
-                edges = json_dat['edges']
-            except:
-                pass
-
-        ids = set()
-        for e in edges:
-            ids.add(e['fromNode'])
-
-        # find all none point chat node , then make handle.
-        goes_to_chat = [n for n in nodes if validate_chat_node(n, ids)]
+        goes_to_chat, nodes, edges = load_blank_nodes_from_canvas_file(canvas_file)
         i_len = len(goes_to_chat)
         if i_len > 0:
             for blank_node in goes_to_chat:
                 bot = ChatUtil.__CREATE_BOT__(self.get_color)
-                threading.Thread(target=lambda: bot.complete_obsidian_chat(blank_node['id'], canvas_file, nodes, edges,
-                                                                           wdir)).start()
+                threading.Thread(target=lambda: bot.complete_obsidian_chat(blank_node['id'], canvas_file, nodes,
+                                                                           edges, wdir)).start()
         else:
             pass

@@ -1,0 +1,41 @@
+{
+  "mappings": {
+    "properties": {
+      "name": {
+        "type": "text"
+      },
+      "type": {
+        "type": "keyword"
+      },
+      "location": {
+        "type": "keyword"
+      },
+      "biomes_appears_in": {
+        "type": "keyword"
+      },
+      "drops": {
+        "type": "nested",
+        "properties": {
+          "item": {
+            "type": "keyword"
+          },
+          "rarity": {
+            "type": "keyword"
+          }
+        }
+      },
+      "health": {
+        "type": "integer"
+      },
+      "damage": {
+        "type": "integer"
+      },
+      "spawn_conditions": {
+        "type": "text"
+      },
+      "wiki_page": {
+        "type": "keyword"
+      }
+    }
+  }
+}
