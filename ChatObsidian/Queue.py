@@ -20,7 +20,7 @@ class Queue:
     def has_next(self):
         return len(self.queue) > 0
 
-    def __contains__(self, item):
+    def contains(self, item):
         return item in self.queue
 
     # Display the queue

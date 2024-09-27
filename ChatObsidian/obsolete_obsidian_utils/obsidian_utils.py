@@ -28,11 +28,14 @@ def obsidian_read_bot_response(file, wdir):
             with open(f, 'r', encoding='utf-8') as file:
                 return file.read()
         return f"response file missing :{file} :{wdir} :{f}"
-    except Exception as e:
+    except Exception:
         return "read response failed"
 
 
 def obsidian_read_file(file, wdir):
+    """
+    find file under work dir and read it.
+    """
     f = obsidian_best_match_file(file, wdir)
     try:
         if os.path.exists(f):
@@ -48,22 +51,24 @@ def obsidian_best_match_file(file, wdir):
     find best match file under the work dir
     """
     if os.path.exists(file):
-        return file
+        return os.path.abspath(file)
     try:
         if wdir is None or not wdir:
             raise Exception(f'Root folder is null, unable to search file:{file}')
 
         # join resolution
         full_dir = os.path.join(wdir, file)
+        full_dir = os.path.abspath(str(full_dir))
         if os.path.exists(full_dir):
             return full_dir
 
         files = obsidian_collect_files(wdir)
         # find the first file name or name without extension that matches the given file name
+        _, __short_name = os.path.split(file)
         for f in files:
             folder, filename = os.path.split(f)
             name, ext = os.path.splitext(filename)
-            if name == file:
+            if name in [file, __short_name] or filename in [file, __short_name]:
                 return f
             if os.path.basename(f) == file or os.path.splitext(os.path.basename(f))[0] == os.path.splitext(file)[0]:
                 return f
@@ -214,8 +219,10 @@ def flush_canvas_file(file, nodes, edges, y_system, system_color):
                     node['color'] = system_color
 
     # Write the updated graph data back to the file
-    with open(file, 'w', encoding='utf-8') as f:
-        json.dump({'nodes': nodes, 'edges': edges}, f)
+    with open(file, 'w', encoding='utf-8') as fs:
+        canvas = {'nodes': nodes, 'edges': edges}
+        json_str = json.dumps(canvas, indent=4)
+        fs.write(json_str)
 
 
 def get_pre(current, nodes, edges):

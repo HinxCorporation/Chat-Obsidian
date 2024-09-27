@@ -27,7 +27,7 @@ class ChatBot_obs:
         usr_mgs.id = generate_uuid(28)
         self.current_chat.messages.append(usr_mgs)
         response, dialog_id = self._generate_response(message)
-        bot_msg = Message(response, BOT_ROLE, id=dialog_id)
+        bot_msg = Message(response, BOT_ROLE, dialog_id)
         self.current_chat.messages.append(bot_msg)
         return response
 

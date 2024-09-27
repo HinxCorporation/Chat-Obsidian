@@ -46,7 +46,7 @@ class Workflow:
             except Exception as e:
                 monitor.on_except(e)
                 if step.is_critical:
-                    break
+                    raise e
 
         return data
 

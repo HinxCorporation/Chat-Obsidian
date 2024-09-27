@@ -1,7 +1,8 @@
 import os
+
+from ChatObsidian.flows import *
 from Workflow import WorkflowBuilder
 from Workflow.main import run_demo_workflow
-from obsidian_custom_flows import SetupAppStep, SetUpDatabaseStep, BeforeRunStep, LooperStep, AfterRunStep
 
 
 def run():

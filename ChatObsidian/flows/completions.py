@@ -1,77 +1,18 @@
 import configparser
 import os
-import threading
 import time
 
 from ChatObsidian.ObsidianShared import current
 from ChatObsidian.WatcherUtil import initialize_with_config, setup_observers
-from ChatObsidian.obsolete_obsidian_utils.chatutil import ChatUtil, load_blank_nodes_from_canvas_file
 from Workflow import FlowData
 from Workflow import Monitor
 from Workflow import Step
 from Workflow import WorkflowBuilder
-
-
-class _chat_prepare_bot_step(Step):
-    def execute(self, data: FlowData, monitor: Monitor) -> None:
-        # make a bot and get ready
-        pass
-
-
-class _chat_process_node_chain_step(Step):
-    def execute(self, data: FlowData, monitor: Monitor) -> None:
-        # calculate and wash the node chain
-        canvas_file = data.get('file')
-        goes_to_chat, nodes, edges = load_blank_nodes_from_canvas_file(canvas_file)
-
-        data.set('goes_to_chat', goes_to_chat)
-        data.set('nodes', nodes)
-        data.set('edges', edges)
-
-
-class _process_messages_step(Step):
-    def execute(self, data: FlowData, monitor: Monitor) -> None:
-        # process node chain to messages
-        goes_to_chat = data.get('goes_to_chat')
-        canvas_file = data.get('file')
-        nodes = data.get('nodes')
-        edges = data.get('edges')
-        wdir = data.get('note_root')
-        util = data.get('util')
-        i_len = len(goes_to_chat)
-        if i_len > 0:
-            for blank_node in goes_to_chat:
-                bot = ChatUtil.__CREATE_BOT__(util.get_color)
-                args = {blank_node['id'], canvas_file, nodes, edges, wdir}
-                # threading.Thread(target=lambda:
-                # bot.complete_obsidian_chat(blank_node['id'], canvas_file, nodes, edges,wdir)).start()
-                threading.Thread(target=lambda: bot.complete_obsidian_chat(*args)).start()
-        else:
-            pass
-        pass
-
-        pass
-
-
-class _chat_finalize_bot_step(Step):
-    def execute(self, data: FlowData, monitor: Monitor) -> None:
-        # finalize the bot and make chat
-        pass
-
-
-class _chat_complete_step(Step):
-    def execute(self, data: FlowData, monitor: Monitor) -> None:
-        # self loop to complete the chat
-        pass
-
-
-class _chat_after_step(Step):
-    def execute(self, data: FlowData, monitor: Monitor) -> None:
-        # grace and cleanup
-        pass
-
-
-__all__ = ['SetupAppStep', 'SetUpDatabaseStep', 'BeforeRunStep', 'LooperStep', 'AfterRunStep']
+from .obsidian_node_to_chain import create_flow as create_chain_to_message_flow
+from .obsidian_processing import (_chat_after_step, _chat_complete_step,
+                                  _chat_finalize_bot_step, _chat_prepare_bot_step,
+                                  _chat_process_node_chain_step, _process_messages_step)
+from ..chat_obsidian import ChatUtil
 
 
 class SetupAppStep(Step):
@@ -96,7 +37,6 @@ class SetupAppStep(Step):
         data.set('note_root', note_root)
         data.set('folders_list', folders_list)
         pass
-        pass
 
 
 class SetUpDatabaseStep(Step):
@@ -117,6 +57,9 @@ class BeforeRunStep(Step):
             .add_step(_chat_after_step("Chat After"))
             .build()
         )
+
+        chain_to_message_flow = create_chain_to_message_flow()
+
         monitor.log('Setting up process file flow. Here is the flow preview')
         monitor.log("Processing canvas file.. ->\n" + str(process_file_flow))
         monitor.log('Setting up runner for process canvas file.')
@@ -125,13 +68,16 @@ class BeforeRunStep(Step):
             _, extension = os.path.splitext(canvas_file)
             if extension == '.canvas':
                 try:
-                    util.complete_obsidian_chat(canvas_file, note_root)
+                    # util.complete_obsidian_chat(canvas_file, note_root)
                     payload = {
                         'file': canvas_file,
                         'util': util,
-                        'note_root': note_root
+                        'note_root': note_root,
+                        '_use_built_in_chains': False,
+                        'chain_flow': chain_to_message_flow
                     }
-                    process_file_flow.run(payload, f"processing chat with :{canvas_file}")
+                    _, canvas_short_name = os.path.split(canvas_file)
+                    process_file_flow.run(payload, f"processing chat with :{canvas_short_name}")
                 except Exception as e:
                     print('processing file error')
                     raise e
@@ -147,25 +93,30 @@ class LooperStep(Step):
         note_root = data.get('note_root')
         folders_list = data.get('folders_list')
         util = data.get('util')
-        file_processor = data.get('runner')
+        file_processor = data.get('runner', None)
+        if not file_processor:
+            raise Exception("No file processor found. program will quit.")
 
         # setup observers
-        print('\033[92m' + 'Setting up observers...\n' + '\033[0m')
+        monitor.log('Setting up observers.')
         observers = setup_observers(note_root, folders_list)
         # print a green color message to indicate the program is running.
-        print('\033[92m' + 'ChatObsidian is running...\nConsole Gonna stop, ctrl + c to exit\n' + '\033[0m')
+        monitor.log('ChatObsidian is running. Console Gonna stop, ctrl + c to exit.')
         try:
             while True:
                 while current.queue.has_next():
-                    file_processor(current.queue.dequeue(), util=util, note_root=note_root)
-                time.sleep(2)
+                    target_file = current.queue.dequeue()
+                    if '.ai.assets' in target_file:
+                        continue
+                    file_processor(target_file, util=util, note_root=note_root)
+                    time.sleep(0.1)  # sleep for 0.1 seconds to avoid too frequent file processing.
         except KeyboardInterrupt:
             for observer in observers:
                 observer.stop()
-            print('user stopped observers')
+            monitor.warning('KeyboardInterrupt received. Program will quit.')
         for observer in observers:
             observer.join()
-        print('program quit.')
+        monitor.log('Program quit.')
         pass
 
 

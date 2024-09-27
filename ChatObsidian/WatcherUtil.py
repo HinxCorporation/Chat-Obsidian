@@ -7,7 +7,6 @@ from watchdog.events import PatternMatchingEventHandler
 from watchdog.observers import Observer
 
 from .ObsidianShared import current
-from .obsolete_obsidian_utils import ChatUtil
 
 
 class WatcherHandler(PatternMatchingEventHandler):
@@ -20,12 +19,12 @@ class WatcherHandler(PatternMatchingEventHandler):
     def on_modified(self, event):
 
         src_path = event.src_path
-        if not current.queue.__contains__(src_path):
+        if not current.queue.contains(src_path):
             current.queue.enqueue(src_path)
 
     def on_created(self, event):
         src_path = event.src_path
-        if not current.queue.__contains__(src_path):
+        if not current.queue.contains(src_path):
             current.queue.enqueue(src_path)
 
 
@@ -43,7 +42,7 @@ def print_context(context):
         pass
 
 
-def process_canvas_file(file, util: ChatUtil, note_root):
+def process_canvas_file(file, util, note_root):
     """
     file is canvas file
     """
