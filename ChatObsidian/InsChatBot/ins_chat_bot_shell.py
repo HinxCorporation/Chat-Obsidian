@@ -36,7 +36,20 @@ class DelayedTextWriter:
         self.stack_count = 0
         os.makedirs(os.path.dirname(target_file), exist_ok=True)  # Ensure directory exists
         threading.Thread(target=self.life_cycle).start()
-        print(f'\033[36m[TextWriter Opened] {target_file} ... \033[0m')
+        print(f'\033[36m[TextWriter Opened] {self.get_friendly_display_text(target_file)} ... \033[0m')
+
+    @staticmethod
+    def get_friendly_display_text(text, max_len=60):
+        if len(text) > max_len:
+            folder, name = os.path.split(text)
+            if len(folder) > 0.67 * max_len:
+                folder_len = int(0.67 * max_len)
+                folder = folder[:folder_len] + '..'
+            if len(name) > 0.33 * max_len:
+                name_len = int(0.33 * max_len)
+                name = '..' + name[len(name) - name_len:]
+            return f'{folder}/{name}'
+        return text
 
     def life_cycle(self):
         while self.is_alive:
@@ -77,6 +90,7 @@ class InsChatBotShell:
         self.text_writer = None
         self.exclude_first_node = False
         self.append_console_msg = False
+        self.debug_msg_on = False
 
     def get(self, key):
         _inside = self.args.get(key, None)
@@ -124,7 +138,24 @@ class InsChatBotShell:
         # prompt, check if it's already in system prompt if bot_prompt in system_prompt: pass else: system_prompt =
         # bot_prompt + '/n' + system_prompt
         self.bot.current_chat.system_prompt = system_prompt
+        # print('Final prompt:' + system_prompt)
+        if self.debug_msg_on:
+            for msg in messages:
+                self.debug_print_msg(msg)
         return messages
+
+    # static method
+    @staticmethod
+    def debug_print_msg(msg):
+        role_field_width = 10
+        content_field_width = 64
+        role = msg.role
+        content = msg.content
+        content = content.replace('\n', ' ')
+
+        if len(content) > content_field_width:
+            content = content[:content_field_width] + '...'
+        print(f'\033[34m{role}{" " * (role_field_width - len(role))}: {content}\033[0m')
 
     def get_color(self, tag):
 
@@ -172,9 +203,24 @@ class InsChatBotShell:
 
     def complete_chat_chains(self, node, nodes, edges):
         node_chain = create_node_chain(node, nodes, edges)
+
+        # node_chain is a chain of nodes, node is a json / dict from obsidian element
         if node_chain is not None and len(node_chain) > 0:
             if self.exclude_first_node:
+                print('\033[31m' + f'Excluding first node: ----' + '\033[0m')
                 node_chain = node_chain[1:]
+            else:
+                # if begins is @sb msg, turn is as msg
+                first_node = node_chain[0]
+                # ..setting
+                if first_node['type'] == 'text':
+                    # and first_node['content'].startswith('@sb'):
+                    first_msg = first_node['text']
+                    if first_msg.startswith('@') and ' ' in first_msg:
+                        copied = first_node.copy()
+                        split_index = first_msg.index(' ')
+                        copied['text'] = first_msg[split_index + 1:]
+                        node_chain[0] = copied
         self.complete_chat_with_chains(node_chain)
 
     def complete_chat_with_chains(self, node_chain):

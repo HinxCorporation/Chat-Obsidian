@@ -28,3 +28,21 @@ class InsChatBotObsidianCustom(InsChatBotShell):
         relative_file = get_relative_file_obsidian(os.path.abspath(call_result_file),
                                                    os.path.abspath(working_dir))
         self.write_out_obsidian(f'\n> Done. [RES.]({relative_file}) \n\n')
+
+    def apply_additional_settings(self, config):
+        errors = []
+        success = []
+        ignores = []
+        for key, value in config.items():
+            if hasattr(self, key):
+                try:
+                    # blue_print(f' \tUpdate bot with: {key}')
+                    setattr(self, key, value)
+                    success.append(f' \tSET:{key} Success')
+                except:
+                    errors.append(f' \tSET:{key} Failure by {value}')
+                    pass
+            else:
+                ignores.append(f' \tSET:{key} Ignored')
+                pass
+        return errors, success, ignores

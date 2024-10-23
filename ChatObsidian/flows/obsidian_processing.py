@@ -1,13 +1,13 @@
 import os
 import threading
-
-from PyAissistant import Chat
+import time
 
 from ChatObsidian import create_node_chain, InsCustom
 from Workflow import FlowData
 from Workflow import Monitor
 from Workflow import Step
 from .obsidian_bot_utils import construct_bot
+from .processors import flow_0, flow_1, flow_2
 from ..chat_obsidian import ChatUtil, load_blank_nodes_from_canvas_file
 
 
@@ -35,10 +35,28 @@ class _process_messages_step(Step):
         self.data = None
         self.monitor = None
 
+        self.flow_0 = flow_0.create()
+        self.flow_0_requires = ['node', 'nodes', 'edges', 'file', 'note_root', 'util',
+                                'exclude_first_node', 'chain_flow', '_use_built_in_chains']
+        self.flow_0.preview()
+
+        self.flow_1 = flow_1.create()
+        self.flow_1_requires = ['node', 'file', 'ins_custom', 'edges', 'nodes', 'note_root']
+        self.flow_1.preview()
+
+        self.flow_2 = flow_2.create()
+        self.flow_2_requires = ['node', 'file', 'ins_custom', 'edges', 'nodes', 'note_root']
+        self.flow_2.preview()
+
     def _custom_flow_continue(self):
         pass
 
     def _test_custom_bot(self, node):
+        """
+        if @bot /bot or bot:bot_name in node text, return True and bot_name
+        elif linked file starts with bot_ return True and file path
+        else return False and ''
+        """
         node_type = node.get('type')
         if node_type == 'text':
             text = node.get('text').strip()
@@ -64,142 +82,126 @@ class _process_messages_step(Step):
                     return True, f'file:{preserve_file}'
         return False, ''
 
-    def _create_chat_bot(self, opt: str, sel: bool, **kwargs):
-        if not sel or not opt:
-            return ChatUtil.__CREATE_BOT__(**kwargs)
+    def _create_chat_bot(self, opt: str, select_from_opt: bool = True, **kwargs):
+        """
+        Create a bot from engine.
+        """
+        if not select_from_opt or not opt:
+            return ChatUtil.__CREATE_BOT__(**kwargs), dict()
         else:
             opt = opt.strip()
-            su, bot = construct_bot(opt, program=self)
+            su, bot, conf = construct_bot(opt, program=self)
             if su:
-                return bot
+                return bot, conf
             if bot is not None:
                 self.monitor.error(f"Instance was created but not detected. Option: {opt}.")
             self.monitor.error(f"Failed to create chat bot with option {opt}.")
-            return ChatUtil.__CREATE_BOT__(**kwargs)
+            return ChatUtil.__CREATE_BOT__(**kwargs), dict()
 
-    def _continue_with_bot(self, bot, node, canvas_file, skip_1=True):
+    def _continue_with_bot(self, bot, node, monitor, canvas_file, skip_1=True):
+        """
+        Continue with custom bot (create from dialog option)
+        """
         data = self.data
+        copied_data = dict()
         ins_custom = InsCustom(bot)
+        copied_data['ins_custom'] = ins_custom
+        copied_data['node'] = node
+        copied_data['file'] = canvas_file
+        copied_data['note_root'] = data.get('note_root')
+        # copied_data['monitor'] = monitor
         if skip_1:
             ins_custom.exclude_first_node = True
-        # requires node_id, canvas_files,root_dir,edges,nodes,**args
-        edges = data.get('edges')
-        nodes = data.get('nodes')
-
-        run_args = {
-            'node_id': node['id'],
-            'canvas_file': canvas_file,
-            'root_dir': data.get('note_root'),
-            'edges': edges,
-            'nodes': nodes,
-        }
-        _title = node.get('title')
-        if not _title:
-            _title = node.get('name')
-        if _title:
-            run_args['title'] = _title
-        _prompt = node.get('prompt')
-        if _prompt:
-            run_args['prompt'] = _prompt
-
-        self.monitor.log(f"Obsidian will complete at background.")
-        threading.Thread(target=lambda: ins_custom.processing(**run_args)).start()
+        for k in self.flow_1_requires:
+            if k not in copied_data:
+                if data.has(k):
+                    copied_data[k] = data.get(k)
+                else:
+                    # monitor.error(f"Data key {k} is missing.")
+                    time.sleep(1)
+                    return
+        additional_data = self.data.get('advance_config', dict())
+        if additional_data:
+            try:
+                # ins_custom.set_config(additional_data)
+                ins_config = additional_data.get('InsBot', None)
+                if ins_config is None:
+                    pass
+                else:
+                    monitor.log(f"Setting advance config for ins bot shell.")
+                    e, s, i = ins_custom.apply_additional_settings(ins_config)
+                    if len(e) > 0:
+                        for err in e:
+                            monitor.error(f"Error in ins config: {err}")
+                    if len(i) > 0:
+                        monitor.warning(f"Ignored ins config: {i}")
+                pass
+            except:
+                monitor.error(f"Failed to set advance config {additional_data}.")
+                pass
+        if skip_1:
+            self.flow_1.run(copied_data, "processing chat with custom bot", custom_monitor=monitor)
+        else:
+            self.flow_2.run(copied_data, "processing chat with custom bot [SPE COMPLEX]", custom_monitor=monitor)
 
     def __continue_with_obsidian_bot(self, node, monitor, data, canvas_file, exclude_first_node=False):
         """
-        continue with InsChatBot
+        continue with InsChatBot (default options)
         """
-        nodes = data.get('nodes')
-        edges = data.get('edges')
-        wdir = data.get('note_root')
-        util = data.get('util')
-        bot = ChatUtil.__CREATE_BOT__(util.get_color)
-
-        monitor.log('Blank node found. Will start chat.')
-        # prepare chat bot and set up the environment
-        bot.setup_chat_info(wdir, canvas_file, node)
-        # wash canvas node, current node change to chat node, and wash edges with the old node id.
-        text, edges = bot.wash_canvas_node(node, edges)
-        # setup write to , and create bot link node elements. join to the canvas file
-        bot.create_obsidian_elements(node, nodes, edges)
-        # flush the new datas to the canvas file
-        bot.flush_to_obsidian(canvas_file, nodes, edges)
-        _chain = create_node_chain(node, nodes, edges)
-        if exclude_first_node:
-            _chain = _chain[1:]
-        # processing message chain
-        msg_text = text
-
-        if data.get('_use_built_in_chains', False):
-            monitor.warning('Using built-in chains')
-            bot.complete_chat_chains(node, nodes, edges)
-            bot.complete_chat_with_chains(_chain)
-        else:
-            monitor.log('Using advanced chains to complete chat message chain')
-            chain_flow = data.get('chain_flow')
-            _new_chat = Chat()
-            # exclude Current, get previous chain and append to new chat
-
-            payload = {
-                'chain': _chain,
-                'wdir': wdir,
-                'bot': bot
-            }
-            monitor.log(f"Running chain flow with length {(len(_chain))} ,root = {wdir}")
-            result = chain_flow.run(payload, f"Processing chain with :{node['id']}")
-            if result.get('error'):
-                monitor.error(
-                    f"Error processing chat with {node['name']}. Error: {result.get('error')}")
-            else:
-                _new_chat.messages = result.get('messages')
-                _new_prompt = result.get('prompt', '')
-                _new_title = result.get('title', '')
-                if not _new_title:
-                    _new_title = result.get('subject', '')
-                _custom_model = result.get('custom_model', '')
-                if not _custom_model:
-                    _custom_model = result.get('model', '')
-                _context = result.get('context', '')
-
-                # this may not import to a chat completion, the most import is messages.
-                if _new_prompt:
-                    _new_chat.system_prompt = _new_prompt
-                if _new_title:
-                    _new_chat.title = _new_title
-                if _custom_model:
-                    _new_chat.model = _custom_model
-                if _context:
-                    _new_chat.context = _context
-
-                bot.current_chat = _new_chat
-            util = result.get('util')
-            msg = util.node_to_message(node)
-            msg_text = msg.content
-
-        # start chat
-        monitor.info(f'Start chat send: {msg_text}')
-        self.start_up_chat_thread(bot, msg_text)
-        monitor.info(f"Chat started. Chat will complete in Obsidian. at background.")
+        data.set('exclude_first_node', exclude_first_node)
+        data.set('node', node)
+        data.set('file', canvas_file)
+        for k in self.flow_0_requires:
+            if not data.has(k):
+                monitor.error(f"Data key {k} is missing.")
+                time.sleep(1)
+                return
+        # copy data and start flow 0
+        copied_data = dict()
+        for k in self.flow_0_requires:
+            copied_data[k] = data.get(k)
+        self.flow_0.run(copied_data, "processing chat with default obsidian bot", custom_monitor=monitor)
 
     def _continue_with(self, node, monitor, data, canvas_file):
         nodes = data.get('nodes')
         edges = data.get('edges')
 
         _chain = create_node_chain(node, nodes, edges)
-        custom_bot_opt = ''
-        custom_bot_sel = False
+
         if _chain is not None and len(_chain) > 0:
             first_node = _chain[0]
-            custom_bot_sel, custom_bot_opt = self._test_custom_bot(first_node)
-
-        if not custom_bot_sel:
-            self.__continue_with_obsidian_bot(node, monitor, data, canvas_file)
         else:
-            bot = self._create_chat_bot(custom_bot_opt, custom_bot_sel)
-            if bot is None:
-                self.__continue_with_obsidian_bot(node, monitor, data, canvas_file, True)
+            first_node = node
+        custom_bot_sel, custom_bot_opt = self._test_custom_bot(first_node)
+
+        bot = None
+        skip_1 = True
+        if custom_bot_sel:
+            custom_bot_opt = custom_bot_opt.strip()
+            known_spliter = [' ', '\t', ', ']
+            for spliter in known_spliter:
+                if spliter in custom_bot_opt:
+                    custom_bot_opt = custom_bot_opt.split(spliter)[0]
+                    skip_1 = False
+                    break
+            bot, advance_config = self._create_chat_bot(custom_bot_opt, custom_bot_sel)
+            if advance_config:
+                data.set('advance_config', advance_config)
+        else:
+            monitor.warning('No custom bot selected. This will be obsolete in the future. Please use as Obsidian bot.')
+
+        # going to processing
+        if not custom_bot_sel or bot is None:
+            # still a fallback to obsidian bot
+            self.__continue_with_obsidian_bot(node, monitor, data, canvas_file)
+            monitor.warning('Processing with flow 0 (obsidian bot)')
+        else:
+            if skip_1:
+                monitor.log('Processing with flow 1 (custom bot)')
             else:
-                self._continue_with_bot(bot, node, canvas_file)
+                monitor.log('Processing with flow 2 (custom bot [SPE COMPLEX])')
+            # continue with custom bot weather skip it or not , there already exist a chat bot
+            self._continue_with_bot(bot, node, monitor, canvas_file, skip_1)
 
     def execute(self, data: FlowData, monitor: Monitor) -> None:
         self.data = data

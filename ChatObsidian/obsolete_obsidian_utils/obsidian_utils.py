@@ -164,6 +164,9 @@ def process_relative_block(util, nodes, edges, blank_node, file, obsidian_dir):
 
 
 def get_relative_file_obsidian(full_path, obsidian_dir):
+    if not obsidian_dir:
+        print(f'obsidian_dir is null, unable to get relative file for {full_path}')
+        return full_path
     return os.path.relpath(str(full_path), obsidian_dir).replace('\\', '/')
 
 

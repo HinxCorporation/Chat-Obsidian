@@ -79,6 +79,7 @@ class OpenAIChatBot(DeepSeekOpenAI):
                  function_call_feat=True,
                  http_proxy="http://localhost:7890",
                  https_proxy="http://localhost:7890",
+                 debug=False,
                  ):
         self.title = file_title
         self.color_provider = color_provider
@@ -103,6 +104,7 @@ class OpenAIChatBot(DeepSeekOpenAI):
         super().__init__(None, function_call_feat)
         self._extend_prompt = ''
         self._default_prompt = None
+        self.debug = debug
 
     def execute_func(self, function_tool, **kwargs):
         tool_details = function_tool['function']
@@ -118,6 +120,12 @@ class OpenAIChatBot(DeepSeekOpenAI):
         msgs = super().message_chain()
         save_messages(msgs, "openai")
         return msgs
+
+    def _finish_openai_payload(self, messages):
+        payloads = super()._finish_openai_payload(messages)
+        if self.debug:
+            print(f"payloads: {payloads}")
+        return payloads
 
     @property
     def status(self):

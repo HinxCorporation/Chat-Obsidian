@@ -170,7 +170,7 @@ class _BotSetUpInstance:
         try:
             bot = self.select_chat_bot(hints)
             if bot:
-                return bot
+                return bot, None
             cd = kwargs.get('cd', None)
             if not cd:
                 cd = kwargs.get('current_dir', None)
@@ -201,12 +201,12 @@ class _BotSetUpInstance:
                 else:
                     pass
 
-            _, bot = self.instance_chat_bot_from_file(config_file, **kwargs)
-            return bot
+            _, bot, conf = self.instance_chat_bot_from_file(config_file, **kwargs)
+            return bot, conf
         except:
             # raise e
             pass
-        return None
+        return None, None
 
     def _from_file_load_configs(self, file_path):
         """
@@ -237,7 +237,7 @@ class _BotSetUpInstance:
             config = None
         return config
 
-    def instance_chat_bot_from_file(self, file_path, **kwargs):
+    def instance_chat_bot_from_file(self, file_path, **kwargs) -> (bool, ChatBot, dict):
         if os.path.exists(file_path):
             config = self._from_file_load_configs(file_path)
             if config:
@@ -254,12 +254,12 @@ class _BotSetUpInstance:
                                 pass
                 else:
                     red_print(f'Failed to create bot from config: {file_path}')
-                return bot is not None, bot
+                return bot is not None, bot, config
             else:
                 red_print(f'Failed to load config from file: {file_path}')
         else:
             red_print(f'File not exists: {file_path}')
-        return False, None
+        return False, None, None
 
 
 bot_set_instance = None
@@ -286,14 +286,21 @@ def construct_bot(hints, **kwargs) -> (bool, ChatBot):
             if os.path.isfile(file_path):
                 # with open(file_path, 'r', encoding='utf-8') as f:
                 #     hints = f.read()
-                return instance.instance_chat_bot_from_file(file_path, **args)
+                su, bot, conf = instance.instance_chat_bot_from_file(file_path, **args)
             else:
-                return False, None
-        bot = instance.instance_chat_bot(hints, **args)
+                return False, None, None
+        else:
+            bot, conf = instance.instance_chat_bot(hints, **args)
         if bot:
-            # green_print(f' \tBot created for {hints}')
-            return True, bot
+            advance_config = dict()
+            try:
+                if conf is not None:
+                    if 'advance' in conf:
+                        advance_config = conf['advance']
+            except:
+                pass
+            return True, bot, advance_config
         else:
             red_print(f'Failed to create bot for {hints}')
-        return False, None
-    return False, None
+        return False, None, None
+    return False, None, None
