@@ -25,17 +25,24 @@ class Workflow:
     def __init__(self, steps: List[Step]):
         self.steps = steps
 
-    def run(self, initial_data: Optional[Dict] = None, flow_name: str = "non-named-flow") -> FlowData:
+    def run(self, initial_data: Optional[Dict] = None, flow_name: str = "non-named-flow",
+            custom_monitor: Monitor = None,
+            enable_monitor_log=False) -> FlowData:
         """
         Runs the workflow with the given initial data.
         :param initial_data: Initial data to be passed to the first step.
         :param flow_name: Name of the flow.
+        :param custom_monitor: Custom monitor to use instead of the default one.
+        :param enable_monitor_log: Whether to enable logging for the monitor.
         :return: The final data after running the workflow.
         """
         data = FlowData()
         if initial_data:
             data.update(initial_data)
-        monitor = Monitor(flow_name)
+        if custom_monitor:
+            monitor = custom_monitor
+        else:
+            monitor = Monitor(flow_name, enable_monitor_file_log=enable_monitor_log)
 
         for step in self.steps:
             if not monitor.can_continue():
