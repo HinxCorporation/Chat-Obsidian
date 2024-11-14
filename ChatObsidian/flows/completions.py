@@ -65,6 +65,9 @@ class BeforeRunStep(Step):
         monitor.log('Setting up runner for process canvas file.')
 
         def file_processor(canvas_file, util, note_root):
+            if not os.path.exists(canvas_file):
+                print(f"canvas file {canvas_file} does not exist.")
+                return
             _, extension = os.path.splitext(canvas_file)
             if extension == '.canvas':
                 try:

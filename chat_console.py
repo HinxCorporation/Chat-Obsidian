@@ -11,6 +11,9 @@ def list_all_functions():
 
 
 if __name__ == '__main__':
-    chat_console.run()
+    try:
+        chat_console.run()
+    except KeyboardInterrupt:
+        print('Exiting...')
 
 

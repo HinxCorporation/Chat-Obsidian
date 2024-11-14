@@ -2,7 +2,8 @@ import os
 import threading
 import time
 
-from ChatObsidian import create_node_chain, InsCustom
+from ChatObsidian.obsolete_obsidian_utils.obsidian_utils import create_node_chain
+from ChatObsidian import InsCustom
 from Workflow import FlowData
 from Workflow import Monitor
 from Workflow import Step

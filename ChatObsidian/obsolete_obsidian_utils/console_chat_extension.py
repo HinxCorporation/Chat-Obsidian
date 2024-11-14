@@ -9,6 +9,11 @@ USE_NERD_FONT = False
 
 
 def process_ai_message(text_content):
+    """
+    from 0~prefix_length (default is 9), check if it's a system message.
+    if it's a system message, create a system message and return True, message.
+    else, return False, None.
+    """
     prefix = text_content[:PREFIX_LENGTH] if len(text_content) > PREFIX_LENGTH else text_content
 
     if ':' in prefix:
@@ -29,7 +34,7 @@ def _color_out(custom, txt):
 
 
 def system_out(txt):
-    _color_out(Back.MAGENTA, txt)
+    _color_out(Back.MAGENTA + Fore.BLACK, txt)
 
 
 def tips_out(txt):

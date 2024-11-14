@@ -81,27 +81,44 @@ class OpenAIChatBot(DeepSeekOpenAI):
                  https_proxy="http://localhost:7890",
                  debug=False,
                  ):
+        """
+        :param color_provider: color provider for console output
+        :param file_title: title of the file for saving messages
+        :param write_out_call_result: function to write out the result of function call
+        :param custom_append: custom append function call result
+        :param url: url of openai api
+        :param host: host of openai api
+        :param model: model of openai api
+        :param key: key of openai api
+        :param max_token: max token of openai api
+        :param temperature: temperature of openai api
+        :param stream: stream of openai api
+        :param function_call_feat: whether to use function call feature or not
+        :param http_proxy: http proxy for openai api
+        :param https_proxy: https proxy for openai api
+        :param debug: debug mode for openai api
+        """
         self.title = file_title
         self.color_provider = color_provider
         self.write_out_call_result = write_out_call_result
         self.custom_append = custom_append
+
+        # must using proxy to access openai api
+        os.environ['http_proxy'] = http_proxy
+        os.environ['https_proxy'] = https_proxy
+        super().__init__(None, function_call_feat,
+                         custom_host=host,
+                         custom_model=model,
+                         custom_key=key,
+                         custom_max_tokens=max_token,
+                         custom_temperature=temperature,)
         if url is not None and url:
             self.url = url
-        if host is not None and host:
-            self.host = host
-        if model is not None and model:
-            self.model = model
-        if key is not None and key:
-            self.key = key
         if max_token is not None and max_token > 10:
             self.max_token = max_token
         self.temperature = temperature
         if stream is not None:
             self.stream = stream
-        # must using proxy to access openai api
-        os.environ['http_proxy'] = http_proxy
-        os.environ['https_proxy'] = https_proxy
-        super().__init__(None, function_call_feat)
         self._extend_prompt = ''
         self._default_prompt = None
         self.debug = debug

@@ -4,8 +4,9 @@ from .example_steps import DataLoadStep as ExampleLoadData, \
     ProcessingStep as ExampleProcessing, ValidationStep as ExampleValidation
 from .flow_data import FlowData
 from .monitor import Monitor
-from .step import Step, StepLoop, StepLoopBreak, StepGroup, Condition, IfStep,SwitchStep, separate_console_line
-from .workflow import Workflow, WorkflowBuilder
+from .step import Step, StepLoop, StepLoopBreak, StepGroup, Condition, IfStep,\
+    SwitchStep, separate_console_line
+from .workflow import Workflow, WorkflowBuilder, get_step_expression
 
 __all__ = [
     'Workflow',
@@ -22,5 +23,6 @@ __all__ = [
     'separate_console_line',
     'ExampleLoadData',
     'ExampleProcessing',
-    'ExampleValidation'
+    'ExampleValidation',
+    'get_step_expression'
 ]

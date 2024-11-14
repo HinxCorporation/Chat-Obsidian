@@ -5,7 +5,7 @@ import time
 import requests
 from PyAissistant import Message
 
-from ChatObsidian import obsidian_read_file
+from ChatObsidian.obsolete_obsidian_utils.obsidian_utils import obsidian_read_file
 from Workflow import Step, WorkflowBuilder, FlowData, Monitor, Workflow
 
 

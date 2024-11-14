@@ -37,7 +37,7 @@ class Step(ABC):
     def __init__(self, name: str, is_critical: bool = False):
         self.name = name
         self.is_critical = is_critical
-        self.parent: Optional['StepGroup'] = None
+        self.parent: Optional['Step'] = None
 
     @abstractmethod
     def execute(self, data: FlowData, monitor: Monitor) -> None:
@@ -90,6 +90,11 @@ class Condition:
         print(f"Condition {self.condition_str} is not implemented yet")
         return False
 
+    def __str__(self):
+        if self.custom_condition_method:
+            return f"(func: {self.custom_condition_method.__name__})"
+        return f"({self.condition_str})"
+
 
 class IfStep(Step):
     def __init__(self, name: str):
@@ -111,13 +116,32 @@ class IfStep(Step):
         return self
 
     def execute(self, data: FlowData, monitor: Monitor) -> None:
-        for condition, next_step in self.chain:
-            if condition.is_satisfied(data):
-                next_step.execute(data, monitor)
-                return
+        if self.is_blank():
+            print(f"No condition found in if step {self.name}")
+            return
+        if self.chain:
+            for condition, next_step in self.chain:
+                if condition.is_satisfied(data):
+                    next_step.execute(data, monitor)
+                    return
         if self.else_step:
             self.else_step.execute(data, monitor)
         pass
+
+    def is_blank(self):
+        """
+        It means no condition and no else step.
+        """
+        if self.else_step:
+            return False
+        if not self.chain:
+            return True
+        if len(self.chain) == 0:
+            return True
+        return False
+
+    def __str__(self):
+        return f"{self.name} (IfStep)"
 
 
 class SwitchStep(Step):
@@ -181,16 +205,25 @@ class SwitchStep(Step):
         else:
             monitor.error(f"No default step found for switch {self.name}")
 
+    def add_case_multi(self, actions, step: Step) -> 'SwitchStep':
+        for value in actions:
+            self.add_case(value, step)
+        return self
+
     def add_case(self, value, step: Step) -> 'SwitchStep':
         self.cases[value] = step
+        step.parent = self
         return self
 
     def add_default(self, step: Step) -> 'SwitchStep':
         self.default_step = step
+        step.parent = self
         return self
 
     def __str__(self):
-        return f"{self.name} (SwitchStep)"
+        if self.custom_case_method:
+            return f"{self.name} (SwitchStep) -> (custom case method {self.custom_case_method.__name__})"
+        return f"{self.name} (SwitchStep) -> key={self.user_key}"
 
 
 class ExecutableSteps(Step, ABC):

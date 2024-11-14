@@ -41,14 +41,16 @@ def run():
 def load_blank_nodes_from_canvas_file(canvas_file: str):
     nodes = []
     edges = []
-    with open(canvas_file, 'r', encoding='utf-8') as f:
-        try:
+    if not os.path.exists(canvas_file):
+        return [], nodes, edges
+    try:
+        with open(canvas_file, 'r', encoding='utf-8') as f:
             json_dat = json.load(f)
             # maybe blank file in this case
             nodes = json_dat['nodes']
             edges = json_dat['edges']
-        except:
-            pass
+    except:
+        pass
 
     ids = set()
     for e in edges:

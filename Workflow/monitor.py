@@ -8,7 +8,11 @@ import colorlog
 class Monitor:
     def __init__(self, flow_name: str = "non-named-flow",
                  enable_console_log: bool = True,
-                 enable_monitor_file_log: bool = False):
+                 enable_monitor_file_log: bool = False,
+                 skip_info: bool = False,
+                 skip_warning: bool = False,
+                 skip_error: bool = False
+                 ):
         """
         Initialize the monitor.
         Parameters:
@@ -16,6 +20,9 @@ class Monitor:
             enable_console_log: bool, whether to enable console log.
             enable_monitor_file_log: bool, whether to enable monitor file log.
         """
+        self.skip_info = skip_info
+        self.skip_warning = skip_warning
+        self.skip_error = skip_error
         self._continue = True
         if not enable_monitor_file_log:
             enable_console_log = True
@@ -72,15 +79,23 @@ class Monitor:
         raise exception
 
     def warning(self, message: str) -> None:
+        if self.skip_warning:
+            return
         self.logger.warning(f"{message}")
 
     def error(self, message: str) -> None:
+        if self.skip_error:
+            return
         self.logger.error(f"{message}")
 
     def info(self, message: str) -> None:
+        if self.skip_info:
+            return
         self.logger.info(f"{message}")
 
     def log(self, message: str) -> None:
+        if self.skip_info:
+            return
         self.logger.info(f"{message}")
 
     def stop_workflow(self) -> None:
