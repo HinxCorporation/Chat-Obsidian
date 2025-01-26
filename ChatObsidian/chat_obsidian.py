@@ -247,6 +247,8 @@ class ChatUtil:
             raise
         bot.append_tool_call_result = False
         bot.executor.extend(ObsidianBotInstance.functions)
+        print(f"\033[32mBot temporary stop using function call feature \033[0m")
+        bot.function_call_features = False
         return bot
 
     def __init__(self):
